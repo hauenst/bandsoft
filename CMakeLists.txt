@@ -12,3 +12,4 @@ add_definitions(-D__LZ4__)
 # Add directories
 add_subdirectory(dependencies)
 add_subdirectory(tools)
+add_subdirectory(calibration)
