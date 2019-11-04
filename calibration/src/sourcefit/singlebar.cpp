@@ -49,8 +49,8 @@ int main( int argc, char** argv){
 
 	// Prep histograms for the background spectrum, and source spectra
 	TH1D * baHist = new TH1D("baHist","baHist",750,0,30000);
-	//TH1D * coHist = new TH1D("coHist","coHist",750,0,30000);
-	TH1D * coHist = new TH1D("coHist","coHist",5000,-5,5);
+	TH1D * coHist = new TH1D("coHist","coHist",750,0,30000);
+	//TH1D * coHist = new TH1D("coHist","coHist",5000,-5,5);
 	TH1D * csHist = new TH1D("csHist","csHist",750,0,30000);
 	TH1D * naHist = new TH1D("naHist","naHist",750,0,30000);
 	
@@ -59,21 +59,21 @@ int main( int argc, char** argv){
 	readFile( inputBa, baHist );
 	readFile( inputCo, coHist );
 	//readFile( inputCs, csHist );
-	//readFile( inputNa, naHist );
+	readFile( inputNa, naHist );
 
 	// Subtract background from all source files:
-	//backgroundSubtract( coHist, baHist );
-	//backgroundSubtract( naHist, baHist );
+	backgroundSubtract( coHist, baHist );
+	backgroundSubtract( naHist, baHist );
 	//backgroundSubtract( csHist, baHist );
 
 	//// Try both methods for cobalt edge:
-	//TCanvas * coFitResult = (TCanvas *) cobaltEdge( coHist );
+	TCanvas * coFitResult = (TCanvas *) cobaltEdge( coHist );
 	//TCanvas * naFitResult = (TCanvas *) sodiumEdge( naHist );
 	//TGraph * coDeri = (TGraph*) histDerivative( coHist , baHist );
 
 	outFile->cd();
 	//coDeri->Write();
-	//coFitResult->Write();
+	coFitResult->Write();
 	//naFitResult->Write();
 	baHist->Write();
 	coHist->Write();
@@ -145,11 +145,11 @@ void readFile( TString inputFile, TH1D * hist ){
 		// Check that everything is non-zero for a good event:
 		if( adcL == 0 || adcR == 0 || tFadcL == 0 || tFadcR == 0 || tTdcL == 0 || tTdcR == 0 ) continue;
 		
-		//if( fabs(tFadcL - tFadcR - FADC_TDIFF[adc_barKey] ) > 4 ) continue;
-		//if( fabs(tTdcL - tTdcR - TDC_TDIFF[tdc_barKey] ) > 4 ) continue;
-		if( sqrt(adcL*adcR) < 1500 ) continue;
-		hist->Fill( log(adcL/adcR) );
-		//hist->Fill( sqrt(adcL*adcR) );
+		if( fabs(tFadcL - tFadcR - FADC_TDIFF[adc_barKey] ) > 4 ) continue;
+		if( fabs(tTdcL - tTdcR - TDC_TDIFF[tdc_barKey] ) > 4 ) continue;
+		hist->Fill( sqrt(adcL*adcR) );
+		//if( sqrt(adcL*adcR) < 1500 ) continue;
+		//hist->Fill( log(adcL/adcR) );
 
 	}
 
@@ -240,7 +240,7 @@ TCanvas * cobaltEdge( TH1D * cobalt){
 	trialFit->Draw("same");
 	c1_co->Update();
 	
-	cout << trialFit->GetParameter(2) << " " << trialFit->GetParameter(3) << "\n";
+	cerr << trialFit->GetParameter(2) << " " << trialFit->GetParameter(3) << "\n";
 	delete junk;
 	return c1_co;
 }
@@ -300,7 +300,7 @@ void LoadLROffsets(){
 	int sector, layer, component, barId;
 	double tdc_off, fadc_off, temp;
 
-	f.open("../include/lr_offsets.txt");
+	f.open("../../include/lr_offsets.txt");
 	while(!f.eof()){
 		f >> sector;
 		f >> layer;
