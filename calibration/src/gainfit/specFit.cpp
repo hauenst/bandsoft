@@ -128,7 +128,9 @@ TApplication *myapp = new TApplication("myapp",0,0);
 			int   ADC_component = BAND_ADC.getInt  (2,aIdx);
 			int   ADC_order     = BAND_ADC.getInt  (3,aIdx);
 			float ADC_adc       = (float)(BAND_ADC.getInt(4,aIdx));
-			float ADC_time      = BAND_ADC.getFloat(5,aIdx);
+			float ADC_amp       = (float)(BAND_ADC.getInt(5,aIdx));
+			float ADC_time      = BAND_ADC.getFloat(6,aIdx);
+			//if( ADC_amp >= 4095) continue; //overflow event
 
 			int barKey = 100*ADC_sector + 10*ADC_layer + ADC_component;
 
