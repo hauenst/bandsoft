@@ -108,6 +108,13 @@ plt.ylabel('HV [V]')
 plt.tight_layout()
 plt.savefig('/work/clas12/segarrae/bandtest/winter19-spring20/caliboutput/HV_old.pdf')
 
+for i in range(len(HVs_orig)):
+	if abs(HVs_orig[i] - HVs_new[i]) > 25:
+		print IDs[i]
+for i in range(len(HVl_orig)):
+	if abs(HVl_orig[i] - HVl_new[i]) > 25:
+		print IDl[i]
+
 plt.figure(3)
 plt.scatter(IDs,HVs_orig-HVs_new,color='red',label='Short Bars')
 plt.scatter(IDl,HVl_orig-HVl_new,color='blue',label='Long Bars')
@@ -122,4 +129,4 @@ plt.tight_layout()
 plt.savefig('/work/clas12/segarrae/bandtest/winter19-spring20/caliboutput/HV_diff.pdf')
 
 
-plt.show()
+#plt.show()

@@ -10,7 +10,7 @@
 # TODO: Set these appropriately:
 path2SNP=/work/clas12/segarrae/bandtest/winter19-spring20/snp_settings/BAND_HV-2019_RGBSpring2019_
 path2Hipo=/work/clas12/segarrae/bandtest/winter19-spring20/cosmics/hipo
-path2O=/work/clas12/segarrae/bandtest/winter19-spring20/caliboutput-pulseHeight
+path2O=/work/clas12/segarrae/bandtest/winter19-spring20/caliboutput
 
 # TODO: Set these appropriately and make sure they match in order
 SNPArray=(${path2SNP}vset_-100V_long_vset_-50V_short.snp ${path2SNP}vset_-50V_long_vset_-25V_short.snp ${path2SNP}vset_0V_long_vset_0V_short.snp ${path2SNP}vset_50V_long_vset_25V_short.snp ${path2SNP}vset_100V_long_vset_50V_short.snp)
