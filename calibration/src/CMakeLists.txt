@@ -1,2 +1,3 @@
-add_subdirectory(sourcefit)
 add_subdirectory(gainfit)
+add_subdirectory(timewalkfit)
+add_subdirectory(sourcefit)
