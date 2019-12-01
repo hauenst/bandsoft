@@ -36,15 +36,22 @@ for fi in files:
 IDs = []; HVs_orig = []; HVs_new = []
 IDl = []; HVl_orig = []; HVl_new = []
 for key in Map:
-	if 'V' in key: continue
-	layer = int(key[0])
-	bar = int(key[1:3])
+	#if 'V' not in key: continue
+	if 'V' in key: 
+		layer = 6
+		bar = int(key[1:3])
+	else:
+		layer = int(key[0])
+		bar = int(key[1:3])
+	print  key, layer, bar
 
 	sector = component = order = 0;
 
 	if bar > 10 and bar < 17:
 		AB = key[3]
-		side = key[4]
+		if layer == 6: side = ''
+		else: side = key[4]
+
 		if side == 'R': order = 1
 		elif side == 'L': order = 0
 		if AB == 'A': sector = 3
@@ -52,7 +59,9 @@ for key in Map:
 		
 		component = bar - 10
 	else:
-		side = key[3]
+		if layer == 6: side = ''
+		else: side = key[3]
+
 		if side == 'R': order = 1
 		elif side == 'L': order = 0
 		
@@ -94,7 +103,7 @@ plt.title('New HV Settings of BAND PMTs')
 plt.xlabel('ID [a.u.]')
 plt.ylabel('HV [V]')
 plt.tight_layout()
-plt.savefig('/work/clas12/segarrae/bandtest/winter19-spring20/caliboutput/HV_new.pdf')
+#plt.savefig('/work/clas12/segarrae/bandtest/winter19-spring20/caliboutput/HV_new.pdf')
 
 plt.figure(2)
 plt.scatter(IDs,HVs_orig,color='red',label='Short Bars')
@@ -106,7 +115,7 @@ plt.title('Original HV Settings of BAND PMTs')
 plt.xlabel('ID [a.u.]')
 plt.ylabel('HV [V]')
 plt.tight_layout()
-plt.savefig('/work/clas12/segarrae/bandtest/winter19-spring20/caliboutput/HV_old.pdf')
+#plt.savefig('/work/clas12/segarrae/bandtest/winter19-spring20/caliboutput/HV_old.pdf')
 
 for i in range(len(HVs_orig)):
 	if abs(HVs_orig[i] - HVs_new[i]) > 25:
@@ -118,7 +127,7 @@ for i in range(len(HVl_orig)):
 plt.figure(3)
 plt.scatter(IDs,HVs_orig-HVs_new,color='red',label='Short Bars')
 plt.scatter(IDl,HVl_orig-HVl_new,color='blue',label='Long Bars')
-plt.xlim([850,5650])
+plt.xlim([850,6650])
 plt.ylim([-100,100])
 plt.legend(numpoints=1,loc=4)
 plt.title('HV Differential (Original-New)')
@@ -126,7 +135,7 @@ plt.xlabel('ID [a.u.]')
 plt.ylabel('HV [V]')
 plt.grid(True)
 plt.tight_layout()
-plt.savefig('/work/clas12/segarrae/bandtest/winter19-spring20/caliboutput/HV_diff.pdf')
+#plt.savefig('/work/clas12/segarrae/bandtest/winter19-spring20/caliboutput/HV_diff.pdf')
 
 
-#plt.show()
+plt.show()
