@@ -43,7 +43,6 @@ for key in Map:
 	else:
 		layer = int(key[0])
 		bar = int(key[1:3])
-	print  key, layer, bar
 
 	sector = component = order = 0;
 
@@ -96,7 +95,7 @@ HVl_new = np.asarray(HVl_new)
 plt.figure(1)
 plt.scatter(IDs,HVs_new,color='red',label='Short Bars')
 plt.scatter(IDl,HVl_new,color='blue',label='Long Bars')
-plt.xlim([850,5650])
+plt.xlim([850,6650])
 plt.ylim([-10,1600])
 plt.legend(numpoints=1,loc=4)
 plt.title('New HV Settings of BAND PMTs')
@@ -108,7 +107,7 @@ plt.tight_layout()
 plt.figure(2)
 plt.scatter(IDs,HVs_orig,color='red',label='Short Bars')
 plt.scatter(IDl,HVl_orig,color='blue',label='Long Bars')
-plt.xlim([850,5650])
+plt.xlim([850,6650])
 plt.ylim([-10,1600])
 plt.legend(numpoints=1,loc=4)
 plt.title('Original HV Settings of BAND PMTs')
