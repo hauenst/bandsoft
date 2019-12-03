@@ -1,3 +1,5 @@
 add_subdirectory(gainfit)
 add_subdirectory(timewalkfit)
+add_subdirectory(lroffset)
+add_subdirectory(attenuation)
 add_subdirectory(sourcefit)
