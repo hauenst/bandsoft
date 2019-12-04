@@ -574,10 +574,10 @@ void reflectFit( TH2F * hist , TCanvas * c , int cd , int is , int il, int ic, d
 	else if( (is+1)==1 )	 		model = new TF1("atten_reflect",lnR_reflect_med,-150,150,3);
 	else if( (is+1)==2 || (is+1)==5) 	model = new TF1("atten_reflect",lnR_reflect_long,-150,150,3);
 	if( (is+1)==3 || (is+1)==4 ) mu_guess *= (-1);
-	model->FixParameter(0,mu_guess);
+	model->SetParameter(0,mu_guess);
 	//model->SetParLimits(0,mu_guess*0.8,mu_guess*1.2);
 	model->SetParameter(1,0.2);
-	//model->SetParLimits(1,0,1);
+	model->SetParLimits(1,0,1);
 	model->SetParameter(2,0);
 	model->SetParLimits(2,-0.2,0.2);
 	//model->SetParameter(2,0);

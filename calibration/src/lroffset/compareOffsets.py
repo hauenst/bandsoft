@@ -51,6 +51,7 @@ plt.yticks(fontsize=15)
 plt.legend(numpoints=1,loc=2)
 plt.grid(True)
 plt.tight_layout()
+plt.savefig("eff_vel_tdcfadc.pdf")
 
 plt.figure(2)
 plt.scatter(IDs,veff_tdc,color='red',label='TDC')
@@ -64,6 +65,7 @@ plt.yticks(fontsize=15)
 plt.legend(numpoints=1,loc=2)
 plt.grid(True)
 plt.tight_layout()
+plt.savefig("eff_vel_individual.pdf")
 
 
 plt.show()

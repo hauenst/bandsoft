@@ -133,6 +133,7 @@ int main(int argc, char** argv) {
 			double ADC_adc = (double)(BAND_ADC.getInt  (4,aIdx));
 			double ADC_amp = (double)(BAND_ADC.getInt  (5,aIdx));
 			double ADC_tdc = (double)(BAND_ADC.getFloat  (6,aIdx));
+
 			
 			int pmtKey = 1000*ADC_sector + 100*ADC_layer + 10*ADC_component + ADC_order;
 			if( PMTs.count(pmtKey) ){
@@ -202,7 +203,7 @@ int main(int argc, char** argv) {
 				// if order == 0, then thisPMT is L and if order == 1 then thisPMT is R
 			int sign = (order == 0) ? 1 : -1;
 			if( thisPMT.tdc == 0 || matePMT.tdc == 0 || thisPMT.ftdc == 0 || matePMT.ftdc == 0 || thisPMT.adc == 0 || matePMT.adc == 0 ||
-				thisPMT.amp == 0 || matePMT.amp == 0 || thisPMT.amp >= 4095 || matePMT.amp >= 4095 ) continue;
+				thisPMT.amp == 0 || matePMT.amp == 0 || thisPMT.amp >= 4095 || matePMT.amp >= 4095 || thisPMT.adc < 4000 || matePMT.adc < 4000 ) continue;
 
 			double tdcdiff 	= (sign)*(	thisPMT.tdc - matePMT.tdc	);
 			double ftdcdiff = (sign)*(	thisPMT.ftdc - matePMT.ftdc	);

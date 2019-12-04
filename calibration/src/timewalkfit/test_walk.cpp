@@ -245,8 +245,8 @@ int main(int argc, char** argv) {
 					gPad -> SetTopMargin(0);
 					midbin = h2_tdc_adc_L[identifier]->GetXaxis()->FindBin(10000);
 					val = h2_tdc_adc_L[identifier]->ProjectionY("trash",midbin,midbin+1)->GetMean();
-					min_val = val - 2;
-					max_val = val + 8;
+					min_val = val - 1;
+					max_val = val + 1;
 					h2_tdc_adc_L[identifier] -> GetYaxis() -> SetRangeUser(min_val,max_val);
 					h2_tdc_adc_L[identifier] -> Draw("COLZ");
 					// Now do the fit:
@@ -262,8 +262,8 @@ int main(int argc, char** argv) {
 					gPad -> SetTopMargin(0);
 					midbin = h2_ftdc_adc_L[identifier]->GetXaxis()->FindBin(10000);
 					val = h2_ftdc_adc_L[identifier]->ProjectionY("trash",midbin,midbin+1)->GetMean();
-					min_val = val - 2;
-					max_val = val + 8;
+					min_val = val - 1;
+					max_val = val + 1;
 					h2_ftdc_adc_L[identifier] -> GetYaxis() -> SetRangeUser(min_val,max_val);
 					h2_ftdc_adc_L[identifier] -> Draw("COLZ");
 					// No fit for FADC 
@@ -279,8 +279,8 @@ int main(int argc, char** argv) {
 					gPad -> SetTopMargin(0);
 					midbin = h2_tdc_adc_R[identifier]->GetXaxis()->FindBin(10000);
 					val = h2_tdc_adc_R[identifier]->ProjectionY("trash",midbin,midbin+1)->GetMean();
-					min_val = val - 2;
-					max_val = val + 8;
+					min_val = val - 1;
+					max_val = val + 1;
 					h2_tdc_adc_R[identifier] -> GetYaxis() -> SetRangeUser(min_val,max_val);
 					h2_tdc_adc_R[identifier] -> Draw("COLZ");
 					// Now do the fit:
@@ -295,8 +295,8 @@ int main(int argc, char** argv) {
 					gPad -> SetTopMargin(0);
 					midbin = h2_ftdc_adc_R[identifier]->GetXaxis()->FindBin(10000);
 					val = h2_ftdc_adc_R[identifier]->ProjectionY("trash",midbin,midbin+1)->GetMean();
-					min_val = val - 2;
-					max_val = val + 8;
+					min_val = val - 1;
+					max_val = val + 1;
 					h2_ftdc_adc_R[identifier] -> GetYaxis() -> SetRangeUser(min_val,max_val);
 					h2_ftdc_adc_R[identifier] -> Draw("COLZ");
 					// No for for FADC

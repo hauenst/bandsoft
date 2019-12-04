@@ -117,7 +117,6 @@ int main(int argc, char** argv) {
 	int event_counter = 0;
 	while(reader.next()==true){
 		if(event_counter%10000==0) cout << "event: " << event_counter << endl;
-		if( event_counter > 100000 ) break;
 		event_counter++;
 
                 reader.read(readevent); // new hipo4
@@ -247,8 +246,8 @@ int main(int argc, char** argv) {
 	c1 -> Update(); 
 	TCanvas *** cSLC_tdc = new TCanvas**[5];
 	TCanvas *** cSLC_ftdc = new TCanvas**[5];
-	c0 -> Print("corr_tdc_results_offsets.pdf(");
-	c1 -> Print("corr_ftdc_results_offsets.pdf(");
+	c0 -> Print("corr2nd_tdc_results_offsets.pdf(");
+	c1 -> Print("corr2nd_ftdc_results_offsets.pdf(");
 	
 	for(int is = 0 ; is < 5 ; is++){
 		cSLC_tdc[is] = new TCanvas*[6];
@@ -283,18 +282,18 @@ int main(int argc, char** argv) {
 			}
 			cSLC_tdc[is][il] -> Modified();     
 			cSLC_tdc[is][il] -> Update();
-			cSLC_tdc[is][il] -> Print("corr_tdc_results_offsets.pdf");
+			cSLC_tdc[is][il] -> Print("corr2nd_tdc_results_offsets.pdf");
 			cSLC_ftdc[is][il] -> Modified();     
 			cSLC_ftdc[is][il] -> Update();
-			cSLC_ftdc[is][il] -> Print("corr_ftdc_results_offsets.pdf");
+			cSLC_ftdc[is][il] -> Print("corr2nd_ftdc_results_offsets.pdf");
 		}
 	}
-	c0 -> Print("corr_tdc_results_offsets.pdf)");
-	c1 -> Print("corr_ftdc_results_offsets.pdf)");
+	c0 -> Print("corr2nd_tdc_results_offsets.pdf)");
+	c1 -> Print("corr2nd_ftdc_results_offsets.pdf)");
 
 	ofstream tabL, tabR;
-	tabL.open("corr_effective_velocity.txt");
-	tabR.open("corr_lr_offsets.txt");
+	tabL.open("corr2nd_effective_velocity.txt");
+	tabR.open("corr2nd_lr_offsets.txt");
 	for(int is = 1 ; is <= 5 ; is++){
 		for(int il = 1 ; il <= 6 ; il++){
 			for(int ic = 1 ; ic <= slc[il-1][is-1] ; ic++){
@@ -402,7 +401,7 @@ void LoadLROffsets(){
 	int sector, layer, component, barId;
 	double tdc_off, fadc_off, temp;
 
-	f.open("../../include/lr_offsets.txt");
+	f.open("../../include/improved_lr_offsets.txt");
 	while(!f.eof()){
 		f >> sector;
 		f >> layer;
