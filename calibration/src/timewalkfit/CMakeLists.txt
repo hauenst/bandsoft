@@ -3,7 +3,7 @@ set(INCLUDES ${ROOT_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/dependencies/include ${CMAK
 include_directories(${INCLUDES})
 
 # Spectral fitting for each individual file for all PMTs:
-add_executable(timewalk timewalk.cpp )
+add_executable(timewalk timewalk.cpp ../calibclass.cpp ../helpers.cpp )
 target_link_libraries(timewalk ${ROOT_LIBRARIES} Hipo4 Banks4 )
 
 add_executable(test_walk test_walk.cpp )

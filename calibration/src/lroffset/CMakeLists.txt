@@ -3,9 +3,10 @@ set(INCLUDES ${ROOT_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/dependencies/include ${CMAK
 include_directories(${INCLUDES})
 
 # Spectral fitting for each individual file for all PMTs:
-add_executable(offsets offsets.cpp )
+add_executable(offsets offsets.cpp ../calibclass.cpp ../helpers.cpp )
 target_link_libraries(offsets ${ROOT_LIBRARIES} Hipo4 Banks4 )
-add_executable(test_offsets test_offsets.cpp )
+
+add_executable(test_offsets test_offsets.cpp ../calibclass.cpp ../helpers.cpp )
 target_link_libraries(test_offsets ${ROOT_LIBRARIES} Hipo4 Banks4 )
 
 install( TARGETS offsets
