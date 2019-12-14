@@ -10,6 +10,7 @@ BParticle::BParticle(hipo::schema __schema) : hipo::bank(__schema){
 	vx_order      = __schema.getEntryOrder("vx"     );
 	vy_order      = __schema.getEntryOrder("vy"     );
 	vz_order      = __schema.getEntryOrder("vz"     );
+	vt_order      = __schema.getEntryOrder("vt"	);
 	charge_order  = __schema.getEntryOrder("charge" );
 	beta_order    = __schema.getEntryOrder("beta"   );
 	chi2pid_order = __schema.getEntryOrder("chi2pid");
