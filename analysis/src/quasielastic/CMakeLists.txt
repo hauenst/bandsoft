@@ -8,3 +8,10 @@ add_executable(eepler eepler.cpp )
 target_link_libraries(eepler ${ROOT_LIBRARIES} Hipo4 Banks4  -lmysqlclient -lpthread -lz -lm -ldl -lssl -lcrypto )
 install( TARGETS eepler
 		DESTINATION ${CMAKE_SOURCE_DIR}/analysis/bin )
+
+
+include_directories(${INCLUDES})
+add_executable(eepcompare eepcompare.cpp )
+target_link_libraries(eepcompare ${ROOT_LIBRARIES} )
+install( TARGETS eepcompare
+		DESTINATION ${CMAKE_SOURCE_DIR}/analysis/bin )
