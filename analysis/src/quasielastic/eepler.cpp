@@ -126,12 +126,6 @@ int main(int argc, char** argv) {
 	TH1D * h1_sim_px_m	= new TH1D("h1_sim_px_m",	"h1_sim_px_m",		50,-5,5);
 	TH1D * h1_sim_py_m	= new TH1D("h1_sim_py_m",	"h1_sim_py_m",		50,-5,5);
 
-
-
-
-
-
-
 	// Connect to the RCDB
 	rcdb::Connection connection("mysql://rcdb@clasdb.jlab.org/rcdb");
 
@@ -299,6 +293,7 @@ int main(int argc, char** argv) {
 
 		} // end loop over events
 		cout << "Total charge collected in file: " << gated_charge << " [microC]\n";
+		cout << "Total number of events (e,e'p): " << outTree->GetEntries() << "\n";
 	}// end loop over files
 	
 
