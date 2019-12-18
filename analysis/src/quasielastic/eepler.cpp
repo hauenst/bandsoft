@@ -9,6 +9,7 @@
 #include "TVector3.h"
 #include "TH2.h"
 #include "TH1.h"
+#include "TVectorT.h"
 
 #include "reader.h"
 #include "bank.h"
@@ -111,20 +112,21 @@ int main(int argc, char** argv) {
 	TH1D * h1_chi2pid_p	= new TH1D("h1_chi2pid_p",	"h1_chi2pid_p",		100,-5,5);
 	TH1D * h1_sim_p_e	= new TH1D("h1_sim_p_e",	"h1_sim_p_e",		20,2.5,4.5);
 	TH1D * h1_sim_th_e	= new TH1D("h1_sim_th_e",	"h1_sim_th_e",		25,0,25);
-	TH2D * h2_sim_th_ph_e	= new TH2D("h2_sim_th_ph_e",	"h2_sim_th_ph_e",	36,-180,180,30,0,30);
-	TH1D * h1_sim_xB_e	= new TH1D("h1_sim_xB_e",	"h1_sim_xB_e",		20,0.5,1.5);
+	TH2D * h2_sim_th_ph_e	= new TH2D("h2_sim_th_ph_e",	"h2_sim_th_ph_e",	108,-180,180,60,0,30);
+	TH1D * h1_sim_xB_e	= new TH1D("h1_sim_xB_e",	"h1_sim_xB_e",		10,0.5,1.5);
 	TH1D * h1_sim_Q2_e	= new TH1D("h1_sim_Q2_e",	"h1_sim_Q2_e",		15,0,3);
 	TH1D * h1_sim_W_e	= new TH1D("h1_sim_W_e",	"h1_sim_W_e",		20,0,2);
 	TH1D * h1_sim_p_p	= new TH1D("h1_sim_p_p",	"h1_sim_p_p",		20,0,4);
 	TH1D * h1_sim_th_p	= new TH1D("h1_sim_th_p",	"h1_sim_th_p",		20,20,80);
 	TH2D * h2_sim_th_ph_p	= new TH2D("h2_sim_th_ph_p",	"h2_sim_th_ph_p",	36,-180,180,20,20,80);
-	TH2D * h2_sim_th_th_pe	= new TH2D("h2_sim_th_th_pe",	"h2_sim_th_th_pe",	30,0,30,20,20,80);
+	TH2D * h2_sim_th_th_pe	= new TH2D("h2_sim_th_th_pe",	"h2_sim_th_th_pe",	60,0,30,20,20,80);
 	TH2D * h2_sim_p_p_pe	= new TH2D("h2_sim_p_p_pe",	"h2_sim_p_p_pe",	20,2.5,4.5,20,0,4);
-	TH2D * h2_sim_ph_ph_pe	= new TH2D("h2_sim_ph_ph_pe",	"h2_sim_ph_ph_pe",	36,-180,180,36,-180,180);
-	TH1D * h1_sim_mass_m	= new TH1D("h1_sim_mass_m",	"h1_sim_mass_m",	50,0,5);
-	TH1D * h1_sim_p_m	= new TH1D("h1_sim_p_m",	"h1_sim_p_m",		50,-5,5);
-	TH1D * h1_sim_px_m	= new TH1D("h1_sim_px_m",	"h1_sim_px_m",		50,-5,5);
-	TH1D * h1_sim_py_m	= new TH1D("h1_sim_py_m",	"h1_sim_py_m",		50,-5,5);
+	TH2D * h2_sim_ph_ph_pe	= new TH2D("h2_sim_ph_ph_pe",	"h2_sim_ph_ph_pe",	108,-180,180,36,-180,180);
+	TH1D * h1_sim_mass_m	= new TH1D("h1_sim_mass_m",	"h1_sim_mass_m",	10,0,0.1);
+	TH1D * h1_sim_p_m	= new TH1D("h1_sim_p_m",	"h1_sim_p_m",		6,0.2,0.8);
+	TH1D * h1_sim_px_m	= new TH1D("h1_sim_px_m",	"h1_sim_px_m",		10,-0.5,0.5);
+	TH1D * h1_sim_py_m	= new TH1D("h1_sim_py_m",	"h1_sim_py_m",		10,-0.5,0.5);
+	TH2D * h2_sim_p_th_m	= new TH2D("h2_sim_p_th_m",	"h2_sim_p_th_m",	36,0,180,6,0.2,0.8);
 
 	// Connect to the RCDB
 	rcdb::Connection connection("mysql://rcdb@clasdb.jlab.org/rcdb");
@@ -278,7 +280,7 @@ int main(int argc, char** argv) {
 			h1_sim_W_e	-> Fill( sqrt(W2) );
 			
 			h1_sim_p_p	-> Fill( p_p );
-			h1_sim_th_p	-> Fill( theta_p );
+			h1_sim_th_p	-> Fill( theta_p*180./M_PI );
 			h2_sim_th_ph_p	-> Fill( phi_p*180./M_PI , theta_p*180./M_PI );
 			h2_sim_th_th_pe	-> Fill( theta_e*180./M_PI , theta_p*180./M_PI );
 			h2_sim_p_p_pe	-> Fill( p_e , p_p );
@@ -287,6 +289,7 @@ int main(int argc, char** argv) {
 			h1_sim_p_m	-> Fill( p_miss );
 			h1_sim_px_m	-> Fill( p_miss*sin(theta_miss)*cos(phi_miss) );
 			h1_sim_py_m	-> Fill( p_miss*sin(theta_miss)*sin(phi_miss) );
+			h2_sim_p_th_m	-> Fill( theta_miss*180./M_PI , p_miss );
 
 			// Fill tree to do any more plots on the fly
 			outTree->Fill();
@@ -298,6 +301,10 @@ int main(int argc, char** argv) {
 	
 
 	outFile->cd();
+	TVectorT<double> fileInfo(2);
+	fileInfo(0) = gated_charge;
+	fileInfo(1) = outTree->GetEntries();
+	fileInfo.Write("fileInfo");
 	h2_EoP_pe	->Write();
 	h1_vX_e		->Write();
 	h1_vY_e		->Write();
@@ -330,6 +337,7 @@ int main(int argc, char** argv) {
 	h1_sim_p_m	->Write(); 
 	h1_sim_px_m	->Write(); 
 	h1_sim_py_m	->Write(); 
+	h2_sim_p_th_m	->Write();
 	outTree->Write();
 	outFile->Close();
 
