@@ -11,7 +11,14 @@ install( TARGETS eepler
 
 
 include_directories(${INCLUDES})
+add_executable(makesimhists makesimhists.cpp )
+target_link_libraries(makesimhists ${ROOT_LIBRARIES} )
+install( TARGETS makesimhists
+		DESTINATION ${CMAKE_SOURCE_DIR}/analysis/bin )
+
+include_directories(${INCLUDES})
 add_executable(eepcompare eepcompare.cpp )
 target_link_libraries(eepcompare ${ROOT_LIBRARIES} )
 install( TARGETS eepcompare
 		DESTINATION ${CMAKE_SOURCE_DIR}/analysis/bin )
+
