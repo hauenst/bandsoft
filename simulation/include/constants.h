@@ -9,7 +9,7 @@ const double alpha=0.00729735253;
 const double mP = 0.93827231;
 const double mN = 0.93956536;
 const double mD = 1.8756;
-const double Ebeam = 10.6;
+const double Ebeam = 10.3;
 const double mE = 0.0005109989;
 
 // Units of cm / ns
