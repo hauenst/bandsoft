@@ -163,7 +163,7 @@ TCanvas * print1Hists( TH1D * dat , TH1D * sim , int idx , TCanvas * saveon ){
 	printon->Divide(1,2);
 
 	double scale_dat = (double)sim->Integral() / (double)dat->Integral();
-	dat->Scale(scale_dat);
+	//dat->Scale(scale_dat);
 	dat->SetMinimum(0);
 	dat->SetTitle("Data");
 	sim->SetTitle("Simulation");

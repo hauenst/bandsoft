@@ -27,21 +27,27 @@
 using namespace std;
 
 int getRunNumber( string filename );
+
 double getBeamEnergy( int runNum );
+
 void getEventInfo( BEvent eventInfo, double &integrated_charge, double &livetime, double &starttime );
+
 void getElectronInfo( BParticle particles, int& pid, TVector3& momentum, TVector3& vertex, 
 			double& time, int& charge, double& beta, double& chi2pid, int& status );
+
 bool checkElectron( int pid, TVector3 momentum, TVector3 vertex, double time, int charge, double beta, double chi2pid, int status,
 			double lV, double lW , double E_tot);
+
 void getProtonInfo( BParticle particles, int& pid, TVector3& momentum, TVector3& vertex,
 			double& time, int& charge, double& beta, double& chi2pid, int& status , int& multiplicity );
+
 bool checkProton( int pid, TVector3 momentum, TVector3 del_vertex, double time, int charge, double beta, double chi2pid, int status, int mult );
+
 void getNeutronInfo(BBand band_hits, int& nHits, vector<int>& barKey, vector<int>& layer, vector<double>& meanADC, 
 			vector<double>& meanTimeFADC, vector<TVector3>& hitPos);
-bool checkNeutron(int nHits, vector<int> barKey, vector<int> layer, vector<double> meanADC, vector<double> meanTimeFADC, 
-			vector<TVector3> hitPos, double starttime, double* FADC_GLOB_SHIFT, double &ToF , int & nMult , 
-			double &Edep, int &thisBar, double &dL, double &theta, double &phi ) ;
-bool pointsToBand(double theta,double phi,double z_m);
+
+bool checkNeutron(int nHits, vector<int> barKey, vector<int> layer, vector<double> meanADC, vector<double> meanTimeFADC, vector<TVector3> hitPos, double starttime, double* FADC_GLOB_SHIFT, double &ToF ) ;
+
 void LoadGlobalShift(double* FADC_GLOB_SHIFT);
 
 int main(int argc, char** argv) {
@@ -55,21 +61,11 @@ int main(int argc, char** argv) {
 	TFile * outFile = new TFile(argv[1],"RECREATE");
 	TTree * outTree = new TTree("skim","CLAS and BAND Physics");
 	double gated_charge	= 0;
-	int ePid		= 0;
-	int eCharge		= 0;
-	int eStatus		= 0;
-	double eTime		= 0;
-	double eBeta 		= 0;
 	double eChi2pid		= 0;
-	double E_tot		= 0;
-	double E_pcal		= 0;
-	double t_e		= 0;
 	double lU		= 0;
 	double lV		= 0;
 	double lW		= 0;
-	double e_vtx		= 0;
-	double e_vty		= 0;
-	double e_vtz		= 0;
+	double E_tot		= 0;
 	double p_e		= 0;
 	double theta_e		= 0;
 	double phi_e		= 0;
@@ -80,82 +76,72 @@ int main(int argc, char** argv) {
 	double Q2		= 0;
 	double xB		= 0;
 	double W2		= 0;
-	double pPid		= 0;
-	double pCharge		= 0;
-	double pStatus		= 0;
-	double pTime		= 0;
-	double pBeta		= 0;
-	double pChi2pid		= 0;
-	double p_vtx		= 0;
-	double p_vty		= 0;
-	double p_vtz		= 0;
 	double p_p		= 0;
 	double theta_p		= 0;
 	double phi_p		= 0;
-	double protons		= 0;
 	double p_miss		= 0;
 	double m_miss		= 0;
 	double theta_miss	= 0;
         double phi_miss		= 0;
-	outTree->Branch("gated_charge"	,&gated_charge		);
-	outTree->Branch("ePid"		,&ePid			);
-	outTree->Branch("eCharge"	,&eCharge		);
-	outTree->Branch("eStatus"	,&eStatus		);
-	outTree->Branch("eTime"	,&eTime				);
-	outTree->Branch("eBeta"	,&eBeta 			);
-	outTree->Branch("eChi2pid"	,&eChi2pid			);
-	outTree->Branch("E_tot"	,&E_tot				);
-	outTree->Branch("E_pcal"	,&E_pcal			);
-	outTree->Branch("t_e"	,&t_e				);
-	outTree->Branch("lU"	,&lU				);
-	outTree->Branch("lV"	,&lV				);
-	outTree->Branch("lW"	,&lW				);
-	outTree->Branch("e_vtx"	,&e_vtx				);
-	outTree->Branch("e_vty"	,&e_vty				);
-	outTree->Branch("e_vtz"	,&e_vtz				);
-	outTree->Branch("p_e"	,&p_e				);
-	outTree->Branch("theta_e"	,&theta_e			);
-	outTree->Branch("phi_e"	,&phi_e				);
-	outTree->Branch("q"	,&q				);
-	outTree->Branch("theta_q"	,&theta_q			);
-	outTree->Branch("phi_q"	,&phi_q				);
-	outTree->Branch("nu"	,&nu				);
-	outTree->Branch("Q2"	,&Q2				);
-	outTree->Branch("xB"	,&xB				);
-	outTree->Branch("W2"	,&W2				);
-	outTree->Branch("pPid"	,&pPid				);
-	outTree->Branch("pCharge"	,&pCharge			);
-	outTree->Branch("pStatus"	,&pStatus			);
-	outTree->Branch("pTime"	,&pTime				);
-	outTree->Branch("pBeta"	,&pBeta				);
-	outTree->Branch("pChi2pid"	,&pChi2pid			);
-	outTree->Branch("p_vtx"	,&p_vtx				);
-	outTree->Branch("p_vty"	,&p_vty				);
-	outTree->Branch("p_vtz"	,&p_vtz				);
-	outTree->Branch("p_p"	,&p_p				);
-	outTree->Branch("theta_p"	,&theta_p			);
-	outTree->Branch("phi_p"	,&phi_p				);
-	outTree->Branch("protons"	,&protons			);
-	outTree->Branch("p_miss"	,&p_miss			);
-	outTree->Branch("m_miss"	,&m_miss			);
-	outTree->Branch("theta_miss"	,&theta_miss			);
-	outTree->Branch("phi_miss"	,&phi_miss			);
 	double ToF		= 0;
 	double Edep		= 0;
-	int nMult		= 0;
-	int thisBar		= 0;
-	int pointing		= 0;
-	double dL		= 0;
-	double theta_n		= 0;
-	double phi_n		= 0;
+	outTree->Branch("gated_charge"	,&gated_charge		);
+	outTree->Branch("eChi2pid"	,&eChi2pid		);
+	outTree->Branch("E_tot"		,&E_tot			);
+	outTree->Branch("lU"		,&lU			);
+	outTree->Branch("lV"		,&lV			);
+	outTree->Branch("lW"		,&lW			);
+	outTree->Branch("p_e"		,&p_e			);
+	outTree->Branch("theta_e"	,&theta_e		);
+	outTree->Branch("phi_e"		,&phi_e			);
+	outTree->Branch("q"		,&q			);
+	outTree->Branch("theta_q"	,&theta_q		);
+	outTree->Branch("phi_q"		,&phi_q			);
+	outTree->Branch("nu"		,&nu			);
+	outTree->Branch("Q2"		,&Q2			);
+	outTree->Branch("xB"		,&xB			);
+	outTree->Branch("W2"		,&W2			);
+	outTree->Branch("p_p"		,&p_p			);
+	outTree->Branch("theta_p"	,&theta_p		);
+	outTree->Branch("phi_p"		,&phi_p			);
+	outTree->Branch("p_miss"	,&p_miss		);
+	outTree->Branch("m_miss"	,&m_miss		);
+	outTree->Branch("theta_miss"	,&theta_miss		);
+	outTree->Branch("phi_miss"	,&phi_miss		);
 	outTree->Branch("ToF"		,&ToF			);
 	outTree->Branch("Edep"		,&Edep			);
-	outTree->Branch("nMult"		,&nMult			);
-	outTree->Branch("thisBar"	,&thisBar		);
-	outTree->Branch("pointing"	,&pointing		);
-	outTree->Branch("dL"		,&dL			);
-	outTree->Branch("theta_n"	,&theta_n		);
-	outTree->Branch("phi_n"		,&phi_n			);
+	TH2D * h2_EoP_pe	= new TH2D("h2_EoP_pe",		"h2_EoP_pe",		400,0,10,400,0,1);
+	TH1D * h1_vX_e		= new TH1D("h1_vX_e",		"h1_vX_e",		100,-10,10);
+	TH1D * h1_vY_e		= new TH1D("h1_vY_e",		"h1_vY_e",		100,-10,10);
+	TH2D * h2_vZ_ph_e	= new TH2D("h2_vZ_ph_e",	"h2_vZ_ph_e",		400,-180,180,200,-20,20);
+	TH1D * h1_tof_e		= new TH1D("h1_tof_e",		"h1_tof_e",		300,0,30);
+	TH1D * h1_chi2pid_e	= new TH1D("h1_chi2pid_e",	"h1_chi2pid_e",		100,-5,5);
+	TH1D * h1_pcal_e	= new TH1D("h1_pcal_e",		"h1_pcal_e",		1000,0,10);
+	TH2D * h2_EoP_lU	= new TH2D("h2_EoP_lU",		"h2_EoP_lU",		400,0,400,400,0,1);
+	TH2D * h2_EoP_lV	= new TH2D("h2_EoP_lV",		"h2_EoP_lV",		400,0,400,400,0,1);
+	TH2D * h2_EoP_lW	= new TH2D("h2_EoP_lW",		"h2_EoP_lW",		400,0,400,400,0,1);
+	TH1D * h1_mult_p	= new TH1D("h1_mult_p",		"h1_mult_p",		10,0,10);
+	TH1D * h1_vdelX_pe	= new TH1D("h1_vdelX_pe",	"h1_vdelX_pe",		200,-10,10);
+        TH1D * h1_vdelY_pe	= new TH1D("h1_vdelY_pe",	"h1_vdelY_pe",		200,-10,10);
+        TH2D * h2_vdelZ_pe	= new TH2D("h2_vdelZ_pe",	"h2_vdelZ_pe",		400,-180,180,300,-15,15);
+	TH2D * h2_BvP_p		= new TH2D("h2_BvP_p",		"h2_BvP_p",		100,0,5,60,0,1.2);
+	TH1D * h1_chi2pid_p	= new TH1D("h1_chi2pid_p",	"h1_chi2pid_p",		100,-5,5);
+	TH1D * h1_sim_p_e	= new TH1D("h1_sim_p_e",	"h1_sim_p_e",		20,2.5,4.5);
+	TH1D * h1_sim_th_e	= new TH1D("h1_sim_th_e",	"h1_sim_th_e",		25,0,25);
+	TH2D * h2_sim_th_ph_e	= new TH2D("h2_sim_th_ph_e",	"h2_sim_th_ph_e",	36,-180,180,30,0,30);
+	TH1D * h1_sim_xB_e	= new TH1D("h1_sim_xB_e",	"h1_sim_xB_e",		20,0.5,1.5);
+	TH1D * h1_sim_Q2_e	= new TH1D("h1_sim_Q2_e",	"h1_sim_Q2_e",		15,0,3);
+	TH1D * h1_sim_W_e	= new TH1D("h1_sim_W_e",	"h1_sim_W_e",		20,0,2);
+	TH1D * h1_sim_p_p	= new TH1D("h1_sim_p_p",	"h1_sim_p_p",		20,0,4);
+	TH1D * h1_sim_th_p	= new TH1D("h1_sim_th_p",	"h1_sim_th_p",		20,20,80);
+	TH2D * h2_sim_th_ph_p	= new TH2D("h2_sim_th_ph_p",	"h2_sim_th_ph_p",	36,-180,180,20,20,80);
+	TH2D * h2_sim_th_th_pe	= new TH2D("h2_sim_th_th_pe",	"h2_sim_th_th_pe",	30,0,30,20,20,80);
+	TH2D * h2_sim_p_p_pe	= new TH2D("h2_sim_p_p_pe",	"h2_sim_p_p_pe",	20,2.5,4.5,20,0,4);
+	TH2D * h2_sim_ph_ph_pe	= new TH2D("h2_sim_ph_ph_pe",	"h2_sim_ph_ph_pe",	36,-180,180,36,-180,180);
+	TH1D * h1_sim_mass_m	= new TH1D("h1_sim_mass_m",	"h1_sim_mass_m",	50,0,5);
+	TH1D * h1_sim_p_m	= new TH1D("h1_sim_p_m",	"h1_sim_p_m",		50,-5,5);
+	TH1D * h1_sim_px_m	= new TH1D("h1_sim_px_m",	"h1_sim_px_m",		50,-5,5);
+	TH1D * h1_sim_py_m	= new TH1D("h1_sim_py_m",	"h1_sim_py_m",		50,-5,5);
 
 	// Connect to the RCDB
 	rcdb::Connection connection("mysql://rcdb@clasdb.jlab.org/rcdb");
@@ -192,22 +178,11 @@ int main(int argc, char** argv) {
 		int event_counter = 0;
 		gated_charge = 0;
 		while(reader.next()==true){
-			// electron clear
-			ePid		= 0;
-			eCharge		= 0;
-			eStatus		= 0;
-			eTime		= 0;
-			eBeta 		= 0;
-			eChi2pid	= 0;
-			E_tot		= 0;
-			E_pcal		= 0;
-			t_e		= 0;
+			eChi2pid 	= 0;
 			lU		= 0;
 			lV		= 0;
 			lW		= 0;
-			e_vtx		= 0;
-			e_vty		= 0;
-			e_vtz		= 0;
+			E_tot		= 0;
 			p_e		= 0;
 			theta_e		= 0;
 			phi_e		= 0;
@@ -218,31 +193,15 @@ int main(int argc, char** argv) {
 			Q2		= 0;
 			xB		= 0;
 			W2		= 0;
-			pPid		= 0;
-			pCharge		= 0;
-			pStatus		= 0;
-			pTime		= 0;
-			pBeta		= 0;
-			pChi2pid	= 0;
-			p_vtx		= 0;
-			p_vty		= 0;
-			p_vtz		= 0;
 			p_p		= 0;
 			theta_p		= 0;
 			phi_p		= 0;
-			protons		= 0;
 			p_miss		= 0;
 			m_miss		= 0;
 			theta_miss	= 0;
 			phi_miss	= 0;
 			ToF		= 0;
 			Edep		= 0;
-			nMult		= 0;
-			thisBar		= 0;
-			pointing	= 0;
-			dL		= 0;
-			theta_n		= 0;
-			phi_n		= 0;
 
 
 			if(event_counter%10000==0) cout << "event: " << event_counter << endl;
@@ -255,10 +214,8 @@ int main(int argc, char** argv) {
 			readevent.getStructure(particles);
 			readevent.getStructure(calorimeter);
 			readevent.getStructure(scintillator);
-			readevent.getStructure(scaler);
 			readevent.getStructure(band_hits);
-			readevent.getStructure(band_adcs);
-			readevent.getStructure(band_tdcs);
+			readevent.getStructure(scaler);
 	
 			// Currently, REC::Event has uncalibrated livetime / charge, so these will have to work
 			double livetime 	= 	scaler.getFloat(2,0);
@@ -271,17 +228,18 @@ int main(int argc, char** argv) {
 
 			// Get electron from particle bank REC::Particle
 			TVector3 eVertex, eMomentum;
+			int ePid = 0, eCharge = 0, eStatus = 0;
+			double eTime = 0, eBeta = 0;
 			getElectronInfo( particles, ePid, eMomentum, eVertex, eTime ,eCharge, eBeta, eChi2pid, eStatus );
 			//	get electron information from scint and calo banks:
-			t_e 	= scintillator.getTime(0) - starttime;
+			double t_e 	= scintillator.getTime(0) - starttime;
 			E_tot 	= calorimeter.getTotE(0);
-			E_pcal 	= calorimeter.getPcalE(0);
+			double E_pcal 	= calorimeter.getPcalE(0);
 			lU	= calorimeter.getLU(0);
 			lV	= calorimeter.getLV(0);
 			lW	= calorimeter.getLW(0);
 			//	Do electron PID cuts
 			bool ePass = checkElectron( ePid, eMomentum, eVertex, eTime ,eCharge, eBeta, eChi2pid, eStatus , lV , lW , E_tot );
-			
 			if( !ePass ) continue;
 
 			// From electron information and beam information, create kinematic variables
@@ -297,28 +255,48 @@ int main(int argc, char** argv) {
 			Q2		= q*q - nu*nu;
 			xB		= Q2 / (2.*mP*nu);
 			W2		= mP*mP - Q2 + 2.*nu*mP;
+			// Histograms to see quality of PID cuts made
+			h2_EoP_pe	-> Fill( p_e , E_tot/p_e	);
+			h1_vX_e		-> Fill( eVertex.X() 		);
+			h1_vY_e		-> Fill( eVertex.Y() 		);
+			h2_vZ_ph_e	-> Fill( phi_e * 180./M_PI, eVertex.Z() 	);
+			h1_tof_e	-> Fill( t_e 			);
+			h1_chi2pid_e	-> Fill( eChi2pid 		);
+			h1_pcal_e	-> Fill( E_pcal 		);
+			h2_EoP_lU	-> Fill( lU ,  E_tot / p_e 	);
+			h2_EoP_lV	-> Fill( lV ,  E_tot / p_e 	);
+			h2_EoP_lW	-> Fill( lW ,  E_tot / p_e 	);
+			
 			
 			// Grab the proton information:
-			TVector3 pVertex, pMomentum;
-			int pPid = 0, pCharge = 0, pStatus = 0, pMult = 0;
-			double pTime = 0, pBeta = 0, pChi2pid = 0;
-			getProtonInfo( particles, pPid, pMomentum, pVertex, pTime ,pCharge, pBeta, pChi2pid, pStatus, pMult );
-			//	do proton PID cuts		
-			bool pPass = checkProton( pPid, pMomentum, pVertex-eVertex, pTime ,pCharge, pBeta, pChi2pid, pStatus , pMult );
-			if( !pPass ) continue;
-			// Create more kinematic variables
-			p_p		= pMomentum.Mag();
-			theta_p		= pMomentum.Theta();
-			phi_p		= pMomentum.Phi();
-			protons		= pMult;
-			double E_p	= sqrt(p_p*p_p + mP*mP);
-			// 	assuming d e -> e' p 
-			TVector3 missMomentum; missMomentum = pMomentum - qMomentum;
-			p_miss		= missMomentum.Mag();
-			m_miss		= mP - mD + sqrt( pow(nu+mD-E_p,2) + pow(p_miss,2) );
-			theta_miss	= missMomentum.Theta();
-			phi_miss	= missMomentum.Phi();
+			//TVector3 pVertex, pMomentum;
+			//int pPid = 0, pCharge = 0, pStatus = 0, pMult = 0;
+			//double pTime = 0, pBeta = 0, pChi2pid = 0;
+			//getProtonInfo( particles, pPid, pMomentum, pVertex, pTime ,pCharge, pBeta, pChi2pid, pStatus, pMult );
+			////	do proton PID cuts		
+			//bool pPass = checkProton( pPid, pMomentum, pVertex-eVertex, pTime ,pCharge, pBeta, pChi2pid, pStatus , pMult );
+			//if( !pPass ) continue;
+			//// Create more kinematic variables
+			//p_p		= pMomentum.Mag();
+			//theta_p		= pMomentum.Theta();
+			//phi_p		= pMomentum.Phi();
+			//double E_p	= sqrt(p_p*p_p + mP*mP);
+			//// 	assuming d e -> e' p 
+			//TVector3 missMomentum; missMomentum = pMomentum - qMomentum;
+			//p_miss		= missMomentum.Mag();
+			//m_miss		= mP - mD + sqrt( pow(nu+mD-E_p,2) + pow(p_miss,2) );
+			//theta_miss	= missMomentum.Theta();
+			//phi_miss	= missMomentum.Phi();
+			//// Histograms to see quality of PID cuts made
+			//h1_mult_p	-> Fill( pMult );
+			//h1_vdelX_pe	-> Fill( pVertex.X() - eVertex.X() );
+			//h1_vdelY_pe	-> Fill( pVertex.Y() - eVertex.Y() );
+			//h2_vdelZ_pe	-> Fill( phi_e*180./M_PI , pVertex.Z() - eVertex.Z() );
+			//h2_BvP_p	-> Fill( pMomentum.Mag() , pBeta );
+			//h1_chi2pid_p	-> Fill( pChi2pid );
 
+			//// Make a physics cut for QE events:
+			//if( sqrt(W2) < 0.6 || sqrt(W2) > 1.05 ) continue;
 			
 			// Get the neutron information
 			int nHits;
@@ -330,20 +308,32 @@ int main(int argc, char** argv) {
 				
 			getNeutronInfo(band_hits, nHits, barKey, layer, meanADC, meanTimeFADC, hitPos);
 			
-			bool nPass = checkNeutron(nHits, barKey, layer, meanADC, meanTimeFADC, hitPos, 
-					starttime, FADC_GLOB_SHIFT, ToF, nMult, Edep, thisBar , dL, theta_n, phi_n );
-			//cout << ToF << " " << Edep << " " << dL << " " << theta_n << " " << phi_n << "\n\n";
-			
-			TVector3 nMomentum = -missMomentum;
-			pointing = pointsToBand(nMomentum.Theta() , nMomentum.Phi() , eVertex.Z() );
-			//if (!nPass) continue;
-		
-			//band_adcs.show();
-			//band_tdcs.show();
+			bool nPass = checkNeutron(nHits, barKey, layer, meanADC, meanTimeFADC, hitPos, starttime, FADC_GLOB_SHIFT, ToF);
+			//cout << nHits << "\t" << nPass << endl;
+			if (!nPass) continue;
+			Edep = meanADC.at(0);
 
 
 			// put more neutron stuff here 
 
+			// Histograms to compare with simulation for counting (e,e'p):
+			//h1_sim_p_e	-> Fill( p_e );
+			//h1_sim_th_e	-> Fill( theta_e*180./M_PI );
+			//h2_sim_th_ph_e	-> Fill( phi_e*180./M_PI , theta_e*180./M_PI );
+			//h1_sim_xB_e	-> Fill( xB );
+			//h1_sim_Q2_e	-> Fill( Q2 );
+			//h1_sim_W_e	-> Fill( sqrt(W2) );
+			//
+			//h1_sim_p_p	-> Fill( p_p );
+			//h1_sim_th_p	-> Fill( theta_p );
+			//h2_sim_th_ph_p	-> Fill( phi_p*180./M_PI , theta_p*180./M_PI );
+			//h2_sim_th_th_pe	-> Fill( theta_e*180./M_PI , theta_p*180./M_PI );
+			//h2_sim_p_p_pe	-> Fill( p_e , p_p );
+			//h2_sim_ph_ph_pe	-> Fill( phi_e*180./M_PI , phi_p*180./M_PI );
+			//h1_sim_mass_m	-> Fill( m_miss );
+			//h1_sim_p_m	-> Fill( p_miss );
+			//h1_sim_px_m	-> Fill( p_miss*sin(theta_miss)*cos(phi_miss) );
+			//h1_sim_py_m	-> Fill( p_miss*sin(theta_miss)*sin(phi_miss) );
 
 			// Fill tree to do any more plots on the fly
 			outTree->Fill();
@@ -355,6 +345,38 @@ int main(int argc, char** argv) {
 	
 
 	outFile->cd();
+	h2_EoP_pe	->Write();
+	h1_vX_e		->Write();
+	h1_vY_e		->Write();
+	h2_vZ_ph_e	->Write();
+	h1_tof_e	->Write();
+	h1_chi2pid_e	->Write();
+	h1_pcal_e	->Write();
+	h2_EoP_lU	->Write();
+	h2_EoP_lV	->Write();
+	h2_EoP_lW	->Write();
+	h1_mult_p	->Write();
+	h1_vdelX_pe	->Write();
+	h1_vdelY_pe	->Write();
+	h2_vdelZ_pe	->Write();
+	h2_BvP_p	->Write();
+	h1_chi2pid_p	->Write();
+	h1_sim_p_e	->Write();
+	h1_sim_th_e	->Write(); 
+	h2_sim_th_ph_e	->Write(); 
+	h1_sim_xB_e	->Write(); 
+	h1_sim_Q2_e	->Write(); 
+	h1_sim_W_e	->Write(); 
+	h1_sim_p_p	->Write(); 
+	h1_sim_th_p	->Write(); 
+	h2_sim_th_ph_p	->Write(); 
+	h2_sim_th_th_pe	->Write(); 
+	h2_sim_p_p_pe	->Write(); 
+	h2_sim_ph_ph_pe	->Write(); 
+	h1_sim_mass_m	->Write(); 
+	h1_sim_p_m	->Write(); 
+	h1_sim_px_m	->Write(); 
+	h1_sim_py_m	->Write(); 
 	outTree->Write();
 	outFile->Close();
 
@@ -362,33 +384,8 @@ int main(int argc, char** argv) {
 }
 
 
-
-void getNeutronInfo(BBand band_hits, int& nHits, vector<int>& barKey, vector<int>& layer, vector<double>& meanADC, vector<double>& meanTimeFADC, vector<TVector3>& hitPos) {
-
-	nHits = band_hits.getRows();
-
-	for (int hit = 0; hit < nHits; hit++) {
-	
-		barKey.push_back(band_hits.getBarKey(hit));
-		layer.push_back(band_hits.getLayer(hit));
-		double ADCL = band_hits.getAdcLcorr(hit);
-		double ADCR = band_hits.getAdcRcorr(hit);
-		double ADCLR = sqrt(ADCL*ADCR);
-		meanADC.push_back(ADCLR);
-		meanTimeFADC.push_back(band_hits.getMeantimeFadc(hit));
-		double hitx = band_hits.getX(hit);
-		double hity = band_hits.getY(hit);
-		double hitz = band_hits.getZ(hit);
-		hitPos.push_back(TVector3(hitx, hity, hitz));	
-		
-	}
-	
-}
-
 int getRunNumber( string filename ){
-	//string parsed = filename.substr( filename.find("inc") );
-	//string parsed = filename.substr( filename.find("_clas") );
-	string parsed = filename.substr( filename.find("_band") );
+	string parsed = filename.substr( filename.find("_clas") );
 	string moreparse = parsed.substr(6,8);
 	cout << filename << " " << parsed << "\n";
 	cout << moreparse << " " << stoi(moreparse) << "\n\n";
@@ -448,6 +445,29 @@ void getProtonInfo( BParticle particles, int& pid, TVector3& momentum, TVector3&
 		}
 	}
 }
+
+void getNeutronInfo(BBand band_hits, int& nHits, vector<int>& barKey, vector<int>& layer, vector<double>& meanADC, vector<double>& meanTimeFADC, vector<TVector3>& hitPos) {
+
+	nHits = band_hits.getRows();
+
+	for (int hit = 0; hit < nHits; hit++) {
+	
+		barKey.push_back(band_hits.getBarKey(hit));
+		layer.push_back(band_hits.getLayer(hit));
+		double ADCL = band_hits.getAdcLcorr(hit);
+		double ADCR = band_hits.getAdcRcorr(hit);
+		double ADCLR = sqrt(ADCL*ADCR);
+		meanADC.push_back(ADCLR);
+		meanTimeFADC.push_back(band_hits.getMeantimeFadc(hit));
+		double hitx = band_hits.getX(hit);
+		double hity = band_hits.getY(hit);
+		double hitz = band_hits.getZ(hit);
+		hitPos.push_back(TVector3(hitx, hity, hitz));	
+		
+	}
+	
+}
+
 bool checkElectron( int pid, TVector3 momentum, TVector3 vertex, double time, int charge, double beta, double chi2pid, int status,
 			double lV, double lW , double E_tot){
 			// Anymore fiducial cuts that are needed for the electron:
@@ -458,51 +478,46 @@ bool checkElectron( int pid, TVector3 momentum, TVector3 vertex, double time, in
 			// 	minimum W cut
 			//	chi2 cut
 			//	pcal energy cut?
-			//
-
 	if( pid != 11 || charge != -1 ) return false;
-	//if( lV < 2 || lW < 2 ) return false;
-	//if( momentum.Mag() < 1 || momentum.Mag() > 4.2 ) return false;
-	//if( chi2pid == 0 || chi2pid > 1 ) return false;
-	//if( E_tot/momentum.Mag() > 0.4 || E_tot/momentum.Mag() < 0.1 ) return false;
 	//if( vertex.X() < -2 || vertex.X() > 2) return false;
 	//if( vertex.Y() < -2 || vertex.Y() > 2) return false;
 	//if( vertex.Z() < -7 || vertex.Z() > 2) return false;
 	//if( time < 15 ) return false;
+	//if( lV < 15 || lW < 15 ) return false;
+	//if( chi2pid < -3 || chi2pid > 2 ) return false;
 	//if( momentum.Mag() < 2 || momentum.Mag() > 10.6 ) return false;
 	//if( E_tot / momentum.Mag() < 0.15 || E_tot / momentum.Mag() > 0.3 ) return false;
 
 	return true;
 }
 bool checkProton( int pid, TVector3 momentum, TVector3 del_vertex, double time, int charge, double beta, double chi2pid, int status, int mult ){
-	//if( momentum.Mag() == 0 || momentum.Mag() > 4.2 ) return false;
-	//if( beta <= 0 || beta > 1 ) return false;
-	//if( mult != 1 ) return false;
-	//if( momentum.Theta() == 0 ) return false;
-	//if( beta <= 0 ) return false;
-	//if( del_vertex.Z() < 0 || del_vertex.Z() > 5 ) return false;
-	//if( chi2pid < -3 || chi2pid > 3 ) return false;
+	if( momentum.Mag() == 0 || momentum.Mag() > 10.6 ) return false;
+	if( beta <= 0 || beta > 1 ) return false;
+	if( mult != 1 ) return false;
+	if( del_vertex.Z() < -5 || del_vertex.Z() > 5 ) return false;
+	if( chi2pid < -3 || chi2pid > 3 ) return false;
 	
 	
 	return true;
 }
 
-bool checkNeutron(int nHits, vector<int> barKey, vector<int> layer, vector<double> meanADC, vector<double> meanTimeFADC, 
-			vector<TVector3> hitPos, double starttime, double* FADC_GLOB_SHIFT, double &ToF , int & nMult , 
-			double &Edep, int &thisBar, double &dL, double &theta, double &phi ) {
+bool checkNeutron(int nHits, vector<int> barKey, vector<int> layer, vector<double> meanADC, vector<double> meanTimeFADC, vector<TVector3> hitPos, double starttime, double* FADC_GLOB_SHIFT, double &ToF ) {
+
+
+	if (nHits != 1) return false;
 
 	for (int hit = 0; hit < nHits; hit++) {
-		if( nMult == 0 ){
-			ToF = meanTimeFADC[hit] - starttime - FADC_GLOB_SHIFT[barKey[hit]];
-			Edep = meanADC[hit];
-			thisBar = barKey[hit];
-			dL = hitPos[hit].Mag();
-			theta = hitPos[hit].Theta();
-			phi = hitPos[hit].Phi();
-			
-			//cout << ToF << " " << Edep << " " << dL << " " << theta << " " << phi << "\n";
-		}
-		nMult++;
+
+		// cut on veto bars
+		if (layer[hit] == 6) return false;
+
+		// cut on time of flight
+		ToF = meanTimeFADC[hit] - starttime - FADC_GLOB_SHIFT[barKey[hit]];
+		//if (ToF < 20 || ToF > 50) return false;	
+
+		// cut on min E_dep
+		// currently assuming 2000 ch/MeV
+		//if (meanADC[hit] < 10000) return false;
 
 	}
 
@@ -540,45 +555,3 @@ void LoadGlobalShift(double* FADC_GLOB_SHIFT){
 
 
 
-bool pointsToBand(double theta,double phi,double z_m){
-	double z = z_m*100; // from m to cm
-
-	// Numbers taken from band/src/main/java/org/jlab/rec/band/constants/Parameters.java
-	double thickness  = 7.2;                                // thickness of each bar (cm)
-	double layerGap[] = {7.94, 7.62, 7.94, 7.62, 7.3};      // gap between center of neighbouring layers (cm), 1-2, 2-3, 3-4, 4-5, 5-6
-
-	// Numbers taken from clas-band-calib/bin/src/org/clas/fcmon/band/BANDConstants.java
-	double bandlen[]  = {163.7,201.9,51.2,51.2,201.9};
-
-	// Distance from ideal target to upstream end of BAND
-	// (from BAND survey report, 02/18/2019)
-	double zUpst = (-302.69-302.69-302.57-302.64)/4.; // [cm]
-
-	// Distance from ideal target to downstream end of layer 5
-	double zDown = (zUpst + 5*thickness) - z_m;
-
-	double rho   = zDown/cos(theta);
-	double xDown = rho*sin(theta)*cos(phi);
-	double yDown = rho*sin(theta)*sin(phi);
-
-	double globalX = (-240.5-240.5+241.0+243.7)/4.; // [cm] --> Not using this yet (need to make sure we have the right coordinate system)
-	double globalY = (-211.0+228.1-210.6+228.1)/4.; // [cm]
-
-	// Sector boundaries
-	double topSec1  = globalY + 13*thickness;
-	double topSec2  = globalY + 10*thickness;
-	double topSec34 = globalY +  3*thickness;
-	double topSec5  = globalY -  3*thickness;
-	double downSec5 = globalY -  5*thickness;
-
-	if( yDown >= topSec1 || yDown <= downSec5 ) return 0;
-
-	if(             (yDown < topSec1  && yDown >= topSec2  && fabs(xDown) < bandlen[0]/2. )||
-			(yDown < topSec2  && yDown >= topSec34 && fabs(xDown) < bandlen[1]/2. )||
-			(yDown < topSec34 && yDown >= topSec5  && fabs(xDown) < bandlen[1]/2. && fabs(xDown) > bandlen[1]/2.-bandlen[2])||
-			(yDown < topSec5  && yDown >= downSec5 && fabs(xDown) < bandlen[4]/2. )
-	  )
-		return 1;
-
-	return 0;
-}

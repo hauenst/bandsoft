@@ -92,7 +92,7 @@ int main(int argc, char ** argv){
 	TH2D * h2_sim_p_p_pe	= new TH2D("h2_sim_p_p_pe",	"h2_sim_p_p_pe",	20,2.5,4.5,20,0,4);
 	TH2D * h2_sim_ph_ph_pe	= new TH2D("h2_sim_ph_ph_pe",	"h2_sim_ph_ph_pe",	108,-180,180,36,-180,180);
 	TH1D * h1_sim_mass_m	= new TH1D("h1_sim_mass_m",	"h1_sim_mass_m",	10,0,0.1);
-	TH1D * h1_sim_p_m	= new TH1D("h1_sim_p_m",	"h1_sim_p_m",		6,0.2,0.8);
+	TH1D * h1_sim_p_m	= new TH1D("h1_sim_p_m",	"h1_sim_p_m",		8,0.,0.8);
 	TH1D * h1_sim_px_m	= new TH1D("h1_sim_px_m",	"h1_sim_px_m",		10,-0.5,0.5);
 	TH1D * h1_sim_py_m	= new TH1D("h1_sim_py_m",	"h1_sim_py_m",		10,-0.5,0.5);
 	TH2D * h2_sim_p_th_m	= new TH2D("h2_sim_p_th_m",	"h2_sim_p_th_m",	36,0,180,6,0.2,0.8);
