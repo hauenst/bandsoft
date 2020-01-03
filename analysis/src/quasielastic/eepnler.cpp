@@ -246,7 +246,7 @@ int main(int argc, char** argv) {
 
 
 			if(event_counter%10000==0) cout << "event: " << event_counter << endl;
-			if(event_counter >= 1000000) break;
+			//if(event_counter >= 1000000) break;
 			event_counter++;
 
 			// Load data structure for this event:

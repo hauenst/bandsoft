@@ -410,8 +410,8 @@ int main(int argc, char** argv) {
 
 int getRunNumber( string filename ){
 	//string parsed = filename.substr( filename.find("inc") );
-	string parsed = filename.substr( filename.find("_clas") );
-	//string parsed = filename.substr( filename.find("_band") );
+	//string parsed = filename.substr( filename.find("_clas") );
+	string parsed = filename.substr( filename.find("_band") );
 	string moreparse = parsed.substr(6,8);
 	cout << filename << " " << parsed << "\n";
 	cout << moreparse << " " << stoi(moreparse) << "\n\n";
