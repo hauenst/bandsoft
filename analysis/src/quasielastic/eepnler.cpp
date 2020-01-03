@@ -26,6 +26,8 @@
 
 using namespace std;
 
+const int maxProtons	= 100;
+
 int getRunNumber( string filename );
 double getBeamEnergy( int runNum );
 void getEventInfo( BEvent eventInfo, double &integrated_charge, double &livetime, double &starttime );
@@ -33,8 +35,8 @@ void getElectronInfo( BParticle particles, int& pid, TVector3& momentum, TVector
 			double& time, int& charge, double& beta, double& chi2pid, int& status );
 bool checkElectron( int pid, TVector3 momentum, TVector3 vertex, double time, int charge, double beta, double chi2pid, int status,
 			double lV, double lW , double E_tot);
-void getProtonInfo( BParticle particles, int& pid, TVector3& momentum, TVector3& vertex,
-			double& time, int& charge, double& beta, double& chi2pid, int& status , int& multiplicity );
+void getProtonInfo( BParticle particles, double pid[maxProtons], TVector3 momentum[maxProtons], TVector3 vertex[maxProtons],
+			double time[maxProtons], double charge[maxProtons], double beta[maxProtons], double chi2pid[maxProtons], double status[maxProtons] , int& multiplicity );
 bool checkProton( int pid, TVector3 momentum, TVector3 del_vertex, double time, int charge, double beta, double chi2pid, int status, int mult );
 void getNeutronInfo(BBand band_hits, int& nHits, vector<int>& barKey, vector<int>& layer, vector<double>& meanADC, 
 			vector<double>& meanTimeFADC, vector<TVector3>& hitPos);
@@ -54,7 +56,12 @@ int main(int argc, char** argv) {
 	// Create output tree
 	TFile * outFile = new TFile(argv[1],"RECREATE");
 	TTree * outTree = new TTree("skim","CLAS and BAND Physics");
+	//	Event info:
+	double Ebeam		= 0;
 	double gated_charge	= 0;
+	double livetime		= 0;
+	double starttime	= 0;
+	//	Electron info:
 	int ePid		= 0;
 	int eCharge		= 0;
 	int eStatus		= 0;
@@ -64,6 +71,7 @@ int main(int argc, char** argv) {
 	double E_tot		= 0;
 	double E_pcal		= 0;
 	double t_e		= 0;
+	double dL_e		= 0;
 	double lU		= 0;
 	double lV		= 0;
 	double lW		= 0;
@@ -80,66 +88,25 @@ int main(int argc, char** argv) {
 	double Q2		= 0;
 	double xB		= 0;
 	double W2		= 0;
-	double pPid		= 0;
-	double pCharge		= 0;
-	double pStatus		= 0;
-	double pTime		= 0;
-	double pBeta		= 0;
-	double pChi2pid		= 0;
-	double p_vtx		= 0;
-	double p_vty		= 0;
-	double p_vtz		= 0;
-	double p_p		= 0;
-	double theta_p		= 0;
-	double phi_p		= 0;
-	double protons		= 0;
-	double p_miss		= 0;
-	double m_miss		= 0;
-	double theta_miss	= 0;
-        double phi_miss		= 0;
-	outTree->Branch("gated_charge"	,&gated_charge		);
-	outTree->Branch("ePid"		,&ePid			);
-	outTree->Branch("eCharge"	,&eCharge		);
-	outTree->Branch("eStatus"	,&eStatus		);
-	outTree->Branch("eTime"	,&eTime				);
-	outTree->Branch("eBeta"	,&eBeta 			);
-	outTree->Branch("eChi2pid"	,&eChi2pid			);
-	outTree->Branch("E_tot"	,&E_tot				);
-	outTree->Branch("E_pcal"	,&E_pcal			);
-	outTree->Branch("t_e"	,&t_e				);
-	outTree->Branch("lU"	,&lU				);
-	outTree->Branch("lV"	,&lV				);
-	outTree->Branch("lW"	,&lW				);
-	outTree->Branch("e_vtx"	,&e_vtx				);
-	outTree->Branch("e_vty"	,&e_vty				);
-	outTree->Branch("e_vtz"	,&e_vtz				);
-	outTree->Branch("p_e"	,&p_e				);
-	outTree->Branch("theta_e"	,&theta_e			);
-	outTree->Branch("phi_e"	,&phi_e				);
-	outTree->Branch("q"	,&q				);
-	outTree->Branch("theta_q"	,&theta_q			);
-	outTree->Branch("phi_q"	,&phi_q				);
-	outTree->Branch("nu"	,&nu				);
-	outTree->Branch("Q2"	,&Q2				);
-	outTree->Branch("xB"	,&xB				);
-	outTree->Branch("W2"	,&W2				);
-	outTree->Branch("pPid"	,&pPid				);
-	outTree->Branch("pCharge"	,&pCharge			);
-	outTree->Branch("pStatus"	,&pStatus			);
-	outTree->Branch("pTime"	,&pTime				);
-	outTree->Branch("pBeta"	,&pBeta				);
-	outTree->Branch("pChi2pid"	,&pChi2pid			);
-	outTree->Branch("p_vtx"	,&p_vtx				);
-	outTree->Branch("p_vty"	,&p_vty				);
-	outTree->Branch("p_vtz"	,&p_vtz				);
-	outTree->Branch("p_p"	,&p_p				);
-	outTree->Branch("theta_p"	,&theta_p			);
-	outTree->Branch("phi_p"	,&phi_p				);
-	outTree->Branch("protons"	,&protons			);
-	outTree->Branch("p_miss"	,&p_miss			);
-	outTree->Branch("m_miss"	,&m_miss			);
-	outTree->Branch("theta_miss"	,&theta_miss			);
-	outTree->Branch("phi_miss"	,&phi_miss			);
+	// 	Proton info:
+	int pMult		= 0;
+	double pPid		[maxProtons]= {0.};
+	double pCharge		[maxProtons]= {0.};
+	double pStatus		[maxProtons]= {0.};
+	double pTime		[maxProtons]= {0.};
+	double pBeta		[maxProtons]= {0.};
+	double pChi2pid		[maxProtons]= {0.};
+	double p_vtx		[maxProtons]= {0.};
+	double p_vty		[maxProtons]= {0.};
+	double p_vtz		[maxProtons]= {0.};
+	double p_p		[maxProtons]= {0.};
+	double theta_p		[maxProtons]= {0.};
+	double phi_p		[maxProtons]= {0.};
+	double p_miss		[maxProtons]= {0.};
+	double m_miss		[maxProtons]= {0.};
+	double theta_miss	[maxProtons]= {0.};
+        double phi_miss		[maxProtons]= {0.};
+	// 	Neutron info:
 	double ToF		= 0;
 	double Edep		= 0;
 	int nMult		= 0;
@@ -148,6 +115,53 @@ int main(int argc, char** argv) {
 	double dL		= 0;
 	double theta_n		= 0;
 	double phi_n		= 0;
+	outTree->Branch("Ebeam"		,&Ebeam			);
+	outTree->Branch("gated_charge"	,&gated_charge		);
+	outTree->Branch("livetime"	,&livetime		);
+	outTree->Branch("starttime"	,&starttime		);
+	outTree->Branch("ePid"		,&ePid			);
+	outTree->Branch("eCharge"	,&eCharge		);
+	outTree->Branch("eStatus"	,&eStatus		);
+	outTree->Branch("eTime"		,&eTime			);
+	outTree->Branch("eBeta"		,&eBeta 		);
+	outTree->Branch("eChi2pid"	,&eChi2pid		);
+	outTree->Branch("E_tot"		,&E_tot			);
+	outTree->Branch("E_pcal"	,&E_pcal		);
+	outTree->Branch("t_e"		,&t_e			);
+	outTree->Branch("dL_e"		,&dL_e			);
+	outTree->Branch("lU"		,&lU			);
+	outTree->Branch("lV"		,&lV			);
+	outTree->Branch("lW"		,&lW			);
+	outTree->Branch("e_vtx"		,&e_vtx			);
+	outTree->Branch("e_vty"		,&e_vty			);
+	outTree->Branch("e_vtz"		,&e_vtz			);
+	outTree->Branch("p_e"		,&p_e			);
+	outTree->Branch("theta_e"	,&theta_e		);
+	outTree->Branch("phi_e"		,&phi_e			);
+	outTree->Branch("q"		,&q			);
+	outTree->Branch("theta_q"	,&theta_q		);
+	outTree->Branch("phi_q"		,&phi_q			);
+	outTree->Branch("nu"		,&nu			);
+	outTree->Branch("Q2"		,&Q2			);
+	outTree->Branch("xB"		,&xB			);
+	outTree->Branch("W2"		,&W2			);
+	outTree->Branch("pMult"		,&pMult			);
+	outTree->Branch("pPid"		,pPid			,"pPid[pMult]/D"	);
+	outTree->Branch("pCharge"	,pCharge		,"pCharge[pMult]/D"	);
+	outTree->Branch("pStatus"	,pStatus		,"pStatus[pMult]/D"	);
+	outTree->Branch("pTime"		,pTime			,"pTime[pMult]/D"	);
+	outTree->Branch("pBeta"		,pBeta			,"pBeta[pMult]/D"	);
+	outTree->Branch("pChi2pid"	,pChi2pid		,"pChi2pid[pMult]/D"	);
+	outTree->Branch("p_vtx"		,p_vtx			,"p_vtx[pMult]/D"	);
+	outTree->Branch("p_vty"		,p_vty			,"p_vty[pMult]/D"	);
+	outTree->Branch("p_vtz"		,p_vtz			,"p_vtz[pMult]/D"	);
+	outTree->Branch("p_p"		,p_p			,"p_p[pMult]/D"		);
+	outTree->Branch("theta_p"	,theta_p		,"theta_p[pMult]/D"	);
+	outTree->Branch("phi_p"		,phi_p			,"phi_p[pMult]/D"	);
+	outTree->Branch("p_miss"	,p_miss			,"p_miss[pMult]/D"	);
+	outTree->Branch("m_miss"	,m_miss			,"m_miss[pMult]/D"	);
+	outTree->Branch("theta_miss"	,theta_miss		,"theta_miss[pMult]/D"	);
+	outTree->Branch("phi_miss"	,phi_miss		,"phi_miss[pMult]/D"	);
 	outTree->Branch("ToF"		,&ToF			);
 	outTree->Branch("Edep"		,&Edep			);
 	outTree->Branch("nMult"		,&nMult			);
@@ -169,7 +183,7 @@ int main(int argc, char** argv) {
 		// Using run number of current file, grab the beam energy from RCDB
 		int runNum = getRunNumber(argv[i]);
 		auto cnd = connection.GetCondition(runNum, "beam_energy");
-		double Ebeam = cnd->ToDouble() / 1000.; // [GeV]
+		Ebeam = cnd->ToDouble() / 1000.; // [GeV]
 
 		// Setup hipo reading for this file
 		TString inputFile = argv[i];
@@ -191,8 +205,10 @@ int main(int argc, char** argv) {
 		// Loop over all events in file
 		int event_counter = 0;
 		gated_charge = 0;
+		livetime	= 0;
 		while(reader.next()==true){
-			// electron clear
+			// Clear all branches
+			starttime 	= 0;
 			ePid		= 0;
 			eCharge		= 0;
 			eStatus		= 0;
@@ -202,6 +218,7 @@ int main(int argc, char** argv) {
 			E_tot		= 0;
 			E_pcal		= 0;
 			t_e		= 0;
+			dL_e		= 0;
 			lU		= 0;
 			lV		= 0;
 			lW		= 0;
@@ -218,23 +235,23 @@ int main(int argc, char** argv) {
 			Q2		= 0;
 			xB		= 0;
 			W2		= 0;
-			pPid		= 0;
-			pCharge		= 0;
-			pStatus		= 0;
-			pTime		= 0;
-			pBeta		= 0;
-			pChi2pid	= 0;
-			p_vtx		= 0;
-			p_vty		= 0;
-			p_vtz		= 0;
-			p_p		= 0;
-			theta_p		= 0;
-			phi_p		= 0;
-			protons		= 0;
-			p_miss		= 0;
-			m_miss		= 0;
-			theta_miss	= 0;
-			phi_miss	= 0;
+			pMult		= 0;
+			memset(	pPid		,0	,sizeof(pPid		)	);
+			memset(	pCharge		,0	,sizeof(pCharge		)	);
+			memset(	pStatus		,0	,sizeof(pStatus		)	);
+			memset(	pTime		,0	,sizeof(pTime		)	);
+			memset(	pBeta		,0	,sizeof(pBeta		)	);
+			memset(	pChi2pid	,0	,sizeof(pChi2pid	)	);
+			memset(	p_vtx		,0	,sizeof(p_vtx		)	);
+			memset(	p_vty		,0	,sizeof(p_vty		)	);
+			memset(	p_vtz		,0	,sizeof(p_vtz		)	);
+			memset(	p_p		,0	,sizeof(p_p		)	);
+			memset(	theta_p		,0	,sizeof(theta_p		)	);
+			memset(	phi_p		,0	,sizeof(phi_p		)	);
+			memset(	p_miss		,0	,sizeof(p_miss		)	);
+			memset(	m_miss		,0	,sizeof(m_miss		)	);
+			memset(	theta_miss	,0	,sizeof(theta_miss	)	);
+			memset(	phi_miss	,0	,sizeof(phi_miss	)	);
 			ToF		= 0;
 			Edep		= 0;
 			nMult		= 0;
@@ -244,9 +261,9 @@ int main(int argc, char** argv) {
 			theta_n		= 0;
 			phi_n		= 0;
 
-
+			// Count events
 			if(event_counter%10000==0) cout << "event: " << event_counter << endl;
-			//if(event_counter >= 1000000) break;
+			//if( event_counter > 1000000 ) break;
 			event_counter++;
 
 			// Load data structure for this event:
@@ -261,27 +278,28 @@ int main(int argc, char** argv) {
 			readevent.getStructure(band_tdcs);
 	
 			// Currently, REC::Event has uncalibrated livetime / charge, so these will have to work
-			double livetime 	= 	scaler.getFloat(2,0);
+			livetime 		= 	scaler.getFloat(2,0);
 			gated_charge 		= 	scaler.getFloat(0,0) * 0.001; // [microC] -- this seems to be ~10-20% accurate
 
 			// Get integrated charge, livetime and start-time from REC::Event
-			double starttime = 0;
 			if( event_info.getRows() == 0 ) continue;
 			getEventInfo( event_info, gated_charge, livetime, starttime );
 
 			// Get electron from particle bank REC::Particle
 			TVector3 eVertex, eMomentum;
 			getElectronInfo( particles, ePid, eMomentum, eVertex, eTime ,eCharge, eBeta, eChi2pid, eStatus );
+			e_vtx = eVertex.X(); e_vty = eVertex.Y(); e_vtz = eVertex.Z(); 
 			//	get electron information from scint and calo banks:
 			t_e 	= scintillator.getTime(0) - starttime;
+			dL_e	= scintillator.getPath(0);
 			E_tot 	= calorimeter.getTotE(0);
 			E_pcal 	= calorimeter.getPcalE(0);
 			lU	= calorimeter.getLU(0);
 			lV	= calorimeter.getLV(0);
 			lW	= calorimeter.getLW(0);
 			//	Do electron PID cuts
+			//		none implemented for the moment
 			bool ePass = checkElectron( ePid, eMomentum, eVertex, eTime ,eCharge, eBeta, eChi2pid, eStatus , lV , lW , E_tot );
-			
 			if( !ePass ) continue;
 
 			// From electron information and beam information, create kinematic variables
@@ -298,28 +316,25 @@ int main(int argc, char** argv) {
 			xB		= Q2 / (2.*mP*nu);
 			W2		= mP*mP - Q2 + 2.*nu*mP;
 			
-			// Grab the proton information:
-			TVector3 pVertex, pMomentum;
-			int pPid = 0, pCharge = 0, pStatus = 0, pMult = 0;
-			double pTime = 0, pBeta = 0, pChi2pid = 0;
-			getProtonInfo( particles, pPid, pMomentum, pVertex, pTime ,pCharge, pBeta, pChi2pid, pStatus, pMult );
-			//	do proton PID cuts		
-			bool pPass = checkProton( pPid, pMomentum, pVertex-eVertex, pTime ,pCharge, pBeta, pChi2pid, pStatus , pMult );
-			if( !pPass ) continue;
-			// Create more kinematic variables
-			p_p		= pMomentum.Mag();
-			theta_p		= pMomentum.Theta();
-			phi_p		= pMomentum.Phi();
-			protons		= pMult;
-			double E_p	= sqrt(p_p*p_p + mP*mP);
-			// 	assuming d e -> e' p 
-			TVector3 missMomentum; missMomentum = pMomentum - qMomentum;
-			p_miss		= missMomentum.Mag();
-			m_miss		= mP - mD + sqrt( pow(nu+mD-E_p,2) + pow(p_miss,2) );
-			theta_miss	= missMomentum.Theta();
-			phi_miss	= missMomentum.Phi();
-
 			
+			// Grab the proton information:
+			TVector3 pVertex[maxProtons], pMomentum[maxProtons];
+			getProtonInfo( particles, pPid, pMomentum, pVertex, pTime ,pCharge, pBeta, pChi2pid, pStatus, pMult );
+			for( int p = 0 ; p < pMult ; p++ ){
+				p_vtx[p]	= pVertex[p].X();
+				p_vty[p]	= pVertex[p].Y();
+				p_vtz[p]	= pVertex[p].Z();
+				p_p[p]		= pMomentum[p].Mag();
+				theta_p[p]	= pMomentum[p].Theta();
+				phi_p[p]	= pMomentum[p].Phi();
+
+				TVector3 missMomentum; missMomentum = pMomentum[p] - qMomentum;
+				p_miss[p]	= missMomentum.Mag();
+				theta_miss[p]	= missMomentum.Theta();
+				phi_miss[p]	= missMomentum.Phi();
+			}
+			/*
+
 			// Get the neutron information
 			int nHits;
 			vector<int> barKey;
@@ -344,7 +359,7 @@ int main(int argc, char** argv) {
 
 			// put more neutron stuff here 
 
-
+			*/
 			// Fill tree to do any more plots on the fly
 			outTree->Fill();
 
@@ -428,22 +443,20 @@ void getElectronInfo( BParticle particles, int& pid, TVector3& momentum, TVector
 	status		= particles.getStatus(0);
 	return;
 }
-void getProtonInfo( BParticle particles, int& pid, TVector3& momentum, TVector3& vertex,
-			double& time, int& charge, double& beta, double& chi2pid, int& status , int& multiplicity ){
+void getProtonInfo( BParticle particles, double pid[maxProtons], TVector3 momentum[maxProtons], TVector3 vertex[maxProtons],
+			double time[maxProtons], double charge[maxProtons], double beta[maxProtons], double chi2pid[maxProtons], double status[maxProtons] , int& multiplicity ){
 	// Takes the first proton in the bank
 	multiplicity = 0;
-	for( int row = 0 ; row < particles.getRows() ; row++ ){
-		pid 		= particles.getPid(row);
-		charge		= particles.getCharge(row);
-		if( pid == 2212 && charge == 1 ){
-			if( multiplicity == 0 ){ // if this is the first proton, save the information
-				momentum 	= particles.getV3P(row);
-				vertex		= particles.getV3v(row);
-				time		= particles.getVt(row);
-				beta		= particles.getBeta(row);
-				chi2pid		= particles.getChi2pid(row);
-				status		= particles.getStatus(row);
-			}
+	for( int row = 1 ; row < particles.getRows() ; row++ ){ // start after electron information
+		pid[multiplicity] 		= particles.getPid(row);
+		charge[multiplicity]		= particles.getCharge(row);
+		if( charge[multiplicity] == 1 ){
+			momentum 	[multiplicity]	= particles.getV3P(row);
+			vertex		[multiplicity]	= particles.getV3v(row);
+			time		[multiplicity]	= particles.getVt(row);
+			beta		[multiplicity]	= particles.getBeta(row);
+			chi2pid		[multiplicity]	= particles.getChi2pid(row);
+			status		[multiplicity]	= particles.getStatus(row);
 			multiplicity ++;
 		}
 	}
