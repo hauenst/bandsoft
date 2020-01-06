@@ -27,9 +27,9 @@
 using namespace std;
 
 const int maxProtons	= 100;
+const int maxNeutrons	= 50;
 
 int getRunNumber( string filename );
-double getBeamEnergy( int runNum );
 void getEventInfo( BEvent eventInfo, double &integrated_charge, double &livetime, double &starttime );
 void getElectronInfo( BParticle particles, int& pid, TVector3& momentum, TVector3& vertex, 
 			double& time, int& charge, double& beta, double& chi2pid, int& status );
@@ -38,13 +38,12 @@ bool checkElectron( int pid, TVector3 momentum, TVector3 vertex, double time, in
 void getProtonInfo( BParticle particles, double pid[maxProtons], TVector3 momentum[maxProtons], TVector3 vertex[maxProtons],
 			double time[maxProtons], double charge[maxProtons], double beta[maxProtons], double chi2pid[maxProtons], double status[maxProtons] , int& multiplicity );
 bool checkProton( int pid, TVector3 momentum, TVector3 del_vertex, double time, int charge, double beta, double chi2pid, int status, int mult );
-void getNeutronInfo(BBand band_hits, int& nHits, vector<int>& barKey, vector<int>& layer, vector<double>& meanADC, 
-			vector<double>& meanTimeFADC, vector<TVector3>& hitPos);
-bool checkNeutron(int nHits, vector<int> barKey, vector<int> layer, vector<double> meanADC, vector<double> meanTimeFADC, 
-			vector<TVector3> hitPos, double starttime, double* FADC_GLOB_SHIFT, double &ToF , int & nMult , 
-			double &Edep, int &thisBar, double &dL, double &theta, double &phi ) ;
+void getNeutronInfo( BBand band_hits, int& mult, int id[maxNeutrons], double edep[maxNeutrons],
+			double time[maxNeutrons], TVector3 path[maxNeutrons] , double starttime );
 bool pointsToBand(double theta,double phi,double z_m);
 void LoadGlobalShift(double* FADC_GLOB_SHIFT);
+
+double FADC_GLOB_SHIFT[600];
 
 int main(int argc, char** argv) {
 	// check number of arguments
@@ -106,15 +105,16 @@ int main(int argc, char** argv) {
 	double m_miss		[maxProtons]= {0.};
 	double theta_miss	[maxProtons]= {0.};
         double phi_miss		[maxProtons]= {0.};
+	double theta_pq		[maxProtons]= {0.};
 	// 	Neutron info:
-	double ToF		= 0;
-	double Edep		= 0;
 	int nMult		= 0;
-	int thisBar		= 0;
-	int pointing		= 0;
-	double dL		= 0;
-	double theta_n		= 0;
-	double phi_n		= 0;
+	int barID		[maxNeutrons]= {0};
+	double dL_n		[maxNeutrons]= {0.};
+	double theta_n		[maxNeutrons]= {0.};
+	double phi_n		[maxNeutrons]= {0.};
+	double p_n		[maxNeutrons]= {0.};
+	double nTime		[maxNeutrons]= {0.};
+	double nEdep		[maxNeutrons]= {0.};
 	outTree->Branch("Ebeam"		,&Ebeam			);
 	outTree->Branch("gated_charge"	,&gated_charge		);
 	outTree->Branch("livetime"	,&livetime		);
@@ -162,20 +162,21 @@ int main(int argc, char** argv) {
 	outTree->Branch("m_miss"	,m_miss			,"m_miss[pMult]/D"	);
 	outTree->Branch("theta_miss"	,theta_miss		,"theta_miss[pMult]/D"	);
 	outTree->Branch("phi_miss"	,phi_miss		,"phi_miss[pMult]/D"	);
-	outTree->Branch("ToF"		,&ToF			);
-	outTree->Branch("Edep"		,&Edep			);
+	outTree->Branch("theta_pq"	,theta_pq		,"theta_pq[pMult]/D"	);
 	outTree->Branch("nMult"		,&nMult			);
-	outTree->Branch("thisBar"	,&thisBar		);
-	outTree->Branch("pointing"	,&pointing		);
-	outTree->Branch("dL"		,&dL			);
-	outTree->Branch("theta_n"	,&theta_n		);
-	outTree->Branch("phi_n"		,&phi_n			);
+	outTree->Branch("barID"		,&barID			,"barID[nMult]/D"	);
+	outTree->Branch("dL_n"		,&dL_n			,"dL_n[nMult]/D"	);
+	outTree->Branch("theta_n"	,&theta_n		,"theta_n[nMult]/D"	);
+	outTree->Branch("phi_n"		,&phi_n			,"phi_n[nMult]/D"	);
+	outTree->Branch("p_n"		,&p_n			,"p_n[nMult]/D"		);
+	outTree->Branch("nTime"		,&nTime			,"nTime[nMult]/D"	);
+	outTree->Branch("nEdep"		,&nEdep			,"nEdep[nMult]/D"	);
+	
 
 	// Connect to the RCDB
 	rcdb::Connection connection("mysql://rcdb@clasdb.jlab.org/rcdb");
 
 	// Load FADC offsets
-	double FADC_GLOB_SHIFT[600];
 	LoadGlobalShift(FADC_GLOB_SHIFT);
 
 	// Load input file
@@ -252,14 +253,15 @@ int main(int argc, char** argv) {
 			memset(	m_miss		,0	,sizeof(m_miss		)	);
 			memset(	theta_miss	,0	,sizeof(theta_miss	)	);
 			memset(	phi_miss	,0	,sizeof(phi_miss	)	);
-			ToF		= 0;
-			Edep		= 0;
+			memset( theta_pq	,0	,sizeof(theta_pq	)	);
 			nMult		= 0;
-			thisBar		= 0;
-			pointing	= 0;
-			dL		= 0;
-			theta_n		= 0;
-			phi_n		= 0;
+			memset( barID		,0	,sizeof(barID		)	);
+			memset( dL_n		,0	,sizeof(dL_n		)	);
+			memset( theta_n		,0	,sizeof(theta_n		)	);
+			memset( phi_n		,0	,sizeof(phi_n		)	);
+			memset( p_n		,0	,sizeof(p_n		)	);
+			memset( nTime		,0	,sizeof(nTime		)	);
+			memset( nEdep		,0	,sizeof(nEdep		)	);
 
 			// Count events
 			if(event_counter%10000==0) cout << "event: " << event_counter << endl;
@@ -332,34 +334,24 @@ int main(int argc, char** argv) {
 				p_miss[p]	= missMomentum.Mag();
 				theta_miss[p]	= missMomentum.Theta();
 				phi_miss[p]	= missMomentum.Phi();
+				theta_pq[p]	= qMomentum.Angle(pMomentum[p]);
+
+				double E_p = sqrt( p_p[p]*p_p[p] + mP*mP );
+				m_miss[p] 	= sqrt( pow( nu + mD - E_p , 2 ) - ( q*q + p_p[p]*p_p[p] - 2*q*p_p[p]*cos(theta_pq[p]) ) );
+				if( m_miss[p] != m_miss[p] ) m_miss[p] = 0.;
 			}
-			/*
 
-			// Get the neutron information
-			int nHits;
-			vector<int> barKey;
-			vector<int> layer;
-			vector<double> meanADC;
-			vector<double> meanTimeFADC;
-			vector<TVector3> hitPos;
-				
-			getNeutronInfo(band_hits, nHits, barKey, layer, meanADC, meanTimeFADC, hitPos);
 			
-			bool nPass = checkNeutron(nHits, barKey, layer, meanADC, meanTimeFADC, hitPos, 
-					starttime, FADC_GLOB_SHIFT, ToF, nMult, Edep, thisBar , dL, theta_n, phi_n );
-			//cout << ToF << " " << Edep << " " << dL << " " << theta_n << " " << phi_n << "\n\n";
+			// Grab the neutron information:
+			TVector3 nMomentum[maxNeutrons], nPath[maxNeutrons];
+			getNeutronInfo( band_hits, nMult, barID, nEdep, nTime, nPath , starttime );
+			for( int n = 0 ; n < nMult ; n++ ){
+				dL_n[n]		= nPath[n].Mag();
+				theta_n[n]	= nPath[n].Theta();
+				phi_n[n]	= nPath[n].Phi();
+				p_n[n]		= nTime[n];	// no conversion to momentum for the moment
+			}
 			
-			TVector3 nMomentum = -missMomentum;
-			pointing = pointsToBand(nMomentum.Theta() , nMomentum.Phi() , eVertex.Z() );
-			//if (!nPass) continue;
-		
-			//band_adcs.show();
-			//band_tdcs.show();
-
-
-			// put more neutron stuff here 
-
-			*/
 			// Fill tree to do any more plots on the fly
 			outTree->Fill();
 
@@ -378,24 +370,18 @@ int main(int argc, char** argv) {
 
 
 
-void getNeutronInfo(BBand band_hits, int& nHits, vector<int>& barKey, vector<int>& layer, vector<double>& meanADC, vector<double>& meanTimeFADC, vector<TVector3>& hitPos) {
-
-	nHits = band_hits.getRows();
-
-	for (int hit = 0; hit < nHits; hit++) {
+void getNeutronInfo( BBand band_hits, int& mult, int id[maxNeutrons], double edep[maxNeutrons],
+			double time[maxNeutrons], TVector3 path[maxNeutrons] , double starttime ){
 	
-		barKey.push_back(band_hits.getBarKey(hit));
-		layer.push_back(band_hits.getLayer(hit));
-		double ADCL = band_hits.getAdcLcorr(hit);
-		double ADCR = band_hits.getAdcRcorr(hit);
-		double ADCLR = sqrt(ADCL*ADCR);
-		meanADC.push_back(ADCLR);
-		meanTimeFADC.push_back(band_hits.getMeantimeFadc(hit));
-		double hitx = band_hits.getX(hit);
-		double hity = band_hits.getY(hit);
-		double hitz = band_hits.getZ(hit);
-		hitPos.push_back(TVector3(hitx, hity, hitz));	
-		
+	if( band_hits.getRows() > maxNeutrons ) return; // laser event
+	for( int hit = 0 ; hit < band_hits.getRows() ; hit++ ){
+		if( band_hits.getLayer(hit) == 6 ) continue;
+
+		id[hit]		= band_hits.getBarKey(hit);
+		edep[hit]	= sqrt( band_hits.getAdcLcorr(hit) * band_hits.getAdcRcorr(hit) );
+		time[hit]	= band_hits.getMeantimeFadc(hit) - FADC_GLOB_SHIFT[id[hit]] - starttime;
+		path[hit].SetXYZ(	band_hits.getX(hit), band_hits.getY(hit), band_hits.getZ(hit) 	);
+		mult++;
 	}
 	
 }
@@ -408,17 +394,6 @@ int getRunNumber( string filename ){
 	cout << filename << " " << parsed << "\n";
 	cout << moreparse << " " << stoi(moreparse) << "\n\n";
         return stoi(moreparse);
-}
-
-double getBeamEnergy( int runNum ){
-        double thisEn = 0;
-
-        if( runNum <= 6399 ) thisEn = 10.6;
-        else{ thisEn = 10.2; }
-        if( runNum == 6523 || runNum == 6524 || runNum == 6525 ) thisEn = 10.;
-	
-
-        return thisEn;
 }
 
 void getEventInfo( BEvent eventInfo, double &integrated_charge, double &livetime, double &starttime ){
@@ -497,28 +472,6 @@ bool checkProton( int pid, TVector3 momentum, TVector3 del_vertex, double time, 
 	//if( chi2pid < -3 || chi2pid > 3 ) return false;
 	
 	
-	return true;
-}
-
-bool checkNeutron(int nHits, vector<int> barKey, vector<int> layer, vector<double> meanADC, vector<double> meanTimeFADC, 
-			vector<TVector3> hitPos, double starttime, double* FADC_GLOB_SHIFT, double &ToF , int & nMult , 
-			double &Edep, int &thisBar, double &dL, double &theta, double &phi ) {
-
-	for (int hit = 0; hit < nHits; hit++) {
-		if( nMult == 0 ){
-			ToF = meanTimeFADC[hit] - starttime - FADC_GLOB_SHIFT[barKey[hit]];
-			Edep = meanADC[hit];
-			thisBar = barKey[hit];
-			dL = hitPos[hit].Mag();
-			theta = hitPos[hit].Theta();
-			phi = hitPos[hit].Phi();
-			
-			//cout << ToF << " " << Edep << " " << dL << " " << theta << " " << phi << "\n";
-		}
-		nMult++;
-
-	}
-
 	return true;
 }
 
