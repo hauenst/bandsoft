@@ -106,6 +106,8 @@ int main(int argc, char** argv) {
 	double theta_miss	[maxProtons]= {0.};
         double phi_miss		[maxProtons]= {0.};
 	double theta_pq		[maxProtons]= {0.};
+	double Wp		[maxProtons]= {0.};
+	double point_miss	[maxProtons]= {0.};
 	// 	Neutron info:
 	int nMult		= 0;
 	int barID		[maxNeutrons]= {0};
@@ -163,6 +165,8 @@ int main(int argc, char** argv) {
 	outTree->Branch("theta_miss"	,theta_miss		,"theta_miss[pMult]/D"	);
 	outTree->Branch("phi_miss"	,phi_miss		,"phi_miss[pMult]/D"	);
 	outTree->Branch("theta_pq"	,theta_pq		,"theta_pq[pMult]/D"	);
+	outTree->Branch("Wp"		,Wp			,"Wp[pMult]/D"		);
+	outTree->Branch("point_miss"	,point_miss		,"point_miss[pMult]/D"	);
 	outTree->Branch("nMult"		,&nMult			);
 	outTree->Branch("barID"		,&barID			,"barID[nMult]/D"	);
 	outTree->Branch("dL_n"		,&dL_n			,"dL_n[nMult]/D"	);
@@ -254,6 +258,8 @@ int main(int argc, char** argv) {
 			memset(	theta_miss	,0	,sizeof(theta_miss	)	);
 			memset(	phi_miss	,0	,sizeof(phi_miss	)	);
 			memset( theta_pq	,0	,sizeof(theta_pq	)	);
+			memset( Wp		,0	,sizeof(Wp		)	);
+			memset( point_miss	,0	,sizeof(point_miss	)	);
 			nMult		= 0;
 			memset( barID		,0	,sizeof(barID		)	);
 			memset( dL_n		,0	,sizeof(dL_n		)	);
@@ -330,7 +336,7 @@ int main(int argc, char** argv) {
 				theta_p[p]	= pMomentum[p].Theta();
 				phi_p[p]	= pMomentum[p].Phi();
 
-				TVector3 missMomentum; missMomentum = pMomentum[p] - qMomentum;
+				TVector3 missMomentum; missMomentum = -(pMomentum[p] - qMomentum);
 				p_miss[p]	= missMomentum.Mag();
 				theta_miss[p]	= missMomentum.Theta();
 				phi_miss[p]	= missMomentum.Phi();
@@ -339,6 +345,12 @@ int main(int argc, char** argv) {
 				double E_p = sqrt( p_p[p]*p_p[p] + mP*mP );
 				m_miss[p] 	= sqrt( pow( nu + mD - E_p , 2 ) - ( q*q + p_p[p]*p_p[p] - 2*q*p_p[p]*cos(theta_pq[p]) ) );
 				if( m_miss[p] != m_miss[p] ) m_miss[p] = 0.;
+
+				double W_primeSq = mD*mD - Q2 + mP*mP + 2.*mD*(nu-E_p) - 2.*nu*E_p + 2.*q*p_p[p]*cos(theta_pq[p]);
+				Wp[p] = sqrt(W_primeSq);
+				if( Wp[p] != Wp[p] ) Wp[p] = 0.;
+
+				point_miss[p] = pointsToBand( theta_miss[p] , phi_miss[p] , p_vtz[p] );
 			}
 
 			
@@ -507,7 +519,8 @@ void LoadGlobalShift(double* FADC_GLOB_SHIFT){
 
 
 bool pointsToBand(double theta,double phi,double z_m){
-	double z = z_m*100; // from m to cm
+	//double z = z_m*100; // from m to cm
+	double z = z_m;
 
 	// Numbers taken from band/src/main/java/org/jlab/rec/band/constants/Parameters.java
 	double thickness  = 7.2;                                // thickness of each bar (cm)
