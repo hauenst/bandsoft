@@ -188,7 +188,7 @@ int main(int argc, char** argv) {
 		// Using run number of current file, grab the beam energy from RCDB
 		int runNum = getRunNumber(argv[i]);
 		auto cnd = connection.GetCondition(runNum, "beam_energy");
-		Ebeam = cnd->ToDouble() / 1000.; // [GeV]
+		Ebeam = cnd->ToDouble() / 1000. * 1.018; // [GeV] -- conversion factor due to miscalibration in RCDB
 
 		// Setup hipo reading for this file
 		TString inputFile = argv[i];
@@ -271,7 +271,7 @@ int main(int argc, char** argv) {
 
 			// Count events
 			if(event_counter%10000==0) cout << "event: " << event_counter << endl;
-			//if( event_counter > 1000000 ) break;
+			//if( event_counter > 100000 ) break;
 			event_counter++;
 
 			// Load data structure for this event:
