@@ -196,6 +196,10 @@ namespace hipo {
     counter++;
   }
 
+  void  benchmark::show(){
+    printf("[benchmark] %24s : time = %12.4f \n", benchmarkName.c_str(),getTimeSec());
+  }
+  
   void  benchmark::pause(){
 
     second = clock.now();

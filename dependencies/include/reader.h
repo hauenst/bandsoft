@@ -1,5 +1,31 @@
+//******************************************************************************
+//*       ██╗  ██╗██╗██████╗  ██████╗     ██╗  ██╗    ██████╗                  *
+//*       ██║  ██║██║██╔══██╗██╔═══██╗    ██║  ██║   ██╔═████╗                 *
+//*       ███████║██║██████╔╝██║   ██║    ███████║   ██║██╔██║                 *
+//*       ██╔══██║██║██╔═══╝ ██║   ██║    ╚════██║   ████╔╝██║                 *
+//*       ██║  ██║██║██║     ╚██████╔╝         ██║██╗╚██████╔╝                 *
+//*       ╚═╝  ╚═╝╚═╝╚═╝      ╚═════╝          ╚═╝╚═╝ ╚═════╝                  *
+//************************ Jefferson National Lab (2017) ***********************
 /*
- *This sowftware was developed at Jefferson National Laboratory.
+ *   Copyright (c) 2017.  Jefferson Lab (JLab). All rights reserved. Permission
+ *   to use, copy, modify, and distribute  this software and its documentation
+ *   for educational, research, and not-for-profit purposes, without fee and
+ *   without a signed licensing agreement.
+ *
+ *   IN NO EVENT SHALL JLAB BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT, SPECIAL
+ *   INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS, ARISING
+ *   OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF JLAB HAS
+ *   BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *   JLAB SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ *   THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ *   PURPOSE. THE HIPO DATA FORMAT SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF
+ *   ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". JLAB HAS NO OBLIGATION TO
+ *   PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+ *
+ *   This software was developed under the United States Government license.
+ *   For more information contact author at gavalian@jlab.org
+ *   Department of Experimental Nuclear Physics, Jefferson Lab.
  */
  /**
   * <pre>
@@ -59,14 +85,14 @@
   * @since 6.0 9/6/17
   */
 /*
- * File:   hipofile.h
+ * File:   reader.h
  * Author: gavalian
  *
  * Created on April 11, 2017, 2:07 PM
  */
 
-#ifndef HIPOFILE_H
-#define HIPOFILE_H
+#ifndef HIPOREADER_H
+#define HIPOREADER_H
 
 
 #define HIPO_FILE_HEADER_SIZE 72
@@ -79,14 +105,16 @@
 #endif
 
 #include <iostream>
+#include <utility>
 #include <vector>
 #include <fstream>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <memory>
 #include <climits>
 #include "record.h"
 #include "utils.h"
+#include "bank.h"
 
 namespace hipo {
 
@@ -113,28 +141,30 @@ namespace hipo {
       long userWordOne;
       long userWordTwo;
   } recordInfo_t;
+
+
   /**
-* READER index class is used to construct entire events
-* sequence from all records, and provides ability to canAdvance
-* through events where record number is automatically calculated
-* and triggers reading of the next record when events in the current
-* record are exhausted.
-*/
-class readerIndex {
+  * READER index class is used to construct entire events
+  * sequence from all records, and provides ability to canAdvance
+  * through events where record number is automatically calculated
+  * and triggers reading of the next record when events in the current
+  * record are exhausted.
+  */
 
-   private:
-     std::vector<int>  recordEvents;
-     std::vector<long> recordPosition;
+  class readerIndex {
 
-     int              currentRecord;
-     int              currentEvent;
-     int              currentRecordEvent;
+    private:
+      std::vector<int>  recordEvents;
+      std::vector<long> recordPosition;
+
+      int              currentRecord{};
+      int              currentEvent{};
+      int              currentRecordEvent{};
 
    public:
-      readerIndex(){
 
-      };
-      ~readerIndex(){};
+      readerIndex()= default;;
+      ~readerIndex()= default;;
 
       bool canAdvance();
       bool advance();
@@ -142,6 +172,8 @@ class readerIndex {
       //dglazier
       bool canAdvanceInRecord();
       bool loadRecord(int irec);
+      bool  gotoEvent(int eventNumber);
+      bool  gotoRecord(int irec);
 
       int  getEventNumber() { return currentEvent;}
       int  getRecordNumber() { return currentRecord;}
@@ -155,18 +187,13 @@ class readerIndex {
       int getNRecords() const {return recordEvents.size();}
 
       void rewind(){
-        currentRecord = -1;
-        currentEvent  = -1;
-        currentRecordEvent = -1;
+        currentRecord = -1; currentEvent  = -1; currentRecordEvent = -1;
       }
       void clear(){
-        recordEvents.clear();
-        recordPosition.clear();
+        recordEvents.clear(); recordPosition.clear();
       }
       void reset(){
-        currentRecord = 0;
-        currentEvent  = 0;
-        currentRecordEvent = 0;
+        currentRecord = 0; currentEvent  = 0; currentRecordEvent = 0;
       }
 };
 
@@ -174,10 +201,10 @@ class readerIndex {
 
     private:
 
-        fileHeader_t      header;
+        fileHeader_t      header{};
         hipo::utils       hipoutils;
         std::ifstream     inputStream;
-        long              inputStreamSize;
+        long              inputStreamSize{};
 
         hipo::record       inputRecord;
         hipo::readerIndex  readerEventIndex;
@@ -188,23 +215,31 @@ class readerIndex {
     public:
 
         reader();
+        reader(const reader &r){}
+
         ~reader();
 
         void  readDictionary(hipo::dictionary &dict);
-        void  open(const char *filename);
-        void setTags(int tag){ tagsToRead.push_back(tag);}
-	//dglazier
-	void setTags(std::vector<long> tags){ tagsToRead=tags;}
+        void  getStructure(hipo::structure &structure,int group, int item);
+        void  getStructureNoCopy(hipo::structure &structure,int group, int item);
 
-	bool  hasNext();
+        void  open(const char *filename);
+        void  setTags(int tag){ tagsToRead.push_back(tag);}
+	      void  setTags(std::vector<long> tags){ tagsToRead=std::move(tags);}
+
+
+	      bool  hasNext();
         bool  next();
+        bool  gotoEvent(int eventNumber);
+        bool  gotoRecord(int irec);
         bool  next(hipo::event &dataevent);
         void  read(hipo::event &dataevent);
         void  printWarning();
 	//dglazier
- 	int getNRecords() const {return readerEventIndex.getNRecords()-1;}
-	bool  nextInRecord();
-	bool loadRecord(int irec);
+ 	      int getNRecords() const {return readerEventIndex.getNRecords()-1;}
+	      bool  nextInRecord();
+	      bool loadRecord(int irec);
+	      int  getEntries(){return readerEventIndex.getMaxEvents();}
       };
 }
-#endif /* HIPOFILE_H */
+#endif /* HIPOREADER_H */

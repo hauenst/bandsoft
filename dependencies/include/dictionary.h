@@ -21,7 +21,6 @@
 #include <string>
 #include <vector>
 
-
 //#include "reader.h"
 
 namespace hipo {
@@ -29,9 +28,9 @@ namespace hipo {
   typedef struct {
     std::string  name;
     std::string  type;
-    int          typeId;
-    int          typeSize;
-    int          offset;
+    int          typeId{};
+    int          typeSize{};
+    int          offset{};
   } schemaEntry_t;
 
 class schema {
@@ -40,15 +39,18 @@ class schema {
     std::map<std::string, int>    schemaEntriesMap;
     std::vector<schemaEntry_t>    schemaEntries;
 
-    int         groupid;
-    int         itemid;
-    int         rowLength;
+    int         groupid{};
+    int         itemid{};
+    int         rowLength{};
+    mutable int         warningCount{10};
+    
     std::string schemaName;
 
 
     int  getTypeSize(int id);
     int  getTypeByString(std::string &typeName);
 
+    
   public:
 
     schema(){ groupid = 0; itemid = 0; rowLength = 0;}
@@ -61,22 +63,44 @@ class schema {
       schemaEntriesMap = s.schemaEntriesMap;
       groupid       = s.groupid;
       itemid        = s.itemid;
-    }
+      }
 
-    virtual ~schema(){}
+    virtual ~schema()= default;
 
-    void  parse(std::string schString);
+    void  parse(const std::string& schString);
     std::string   getName(){ return schemaName;}
     int   getGroup(){ return groupid;}
     int   getItem(){ return itemid;}
     int   getSizeForRows(int rows);
-    int   getRowLength();
-    int   getEntryOrder(const char *name);
-    int   getOffset(int item, int order, int rows);
-    int   getOffset(const char *name, int order, int rows);
-    int   getEntryType(int item){ return schemaEntries[item].typeId;}
-    std::string getEntryName(int item) { return schemaEntries[item].name;}
-    int   getEntries(){ return schemaEntries.size();}
+     
+    int  getRowLength()  const noexcept{
+      const auto nentries = schemaEntries.size()-1;
+      const auto &sch=schemaEntries[nentries];
+      return sch.offset + sch.typeSize;
+    }
+
+    int   getEntryOrder(const char *name) const;
+
+    bool  exists(const char *name) const{
+      if(schemaEntriesMap.count(name)) return true;
+      return false;
+    }
+    
+    int   getOffset(int item, int order, int rows) const  {
+      const auto &sch=schemaEntries[item];
+      return  rows*sch.offset + order*sch.typeSize;
+    }
+
+    int   getOffset(const char *name, int order, int rows) const  {
+      int item = schemaEntriesMap.at(name);
+      return getOffset(item,order,rows);  
+    }
+    
+    int   getEntryType(int item) const noexcept {
+      return schemaEntries[item].typeId;
+    }
+    std::string getEntryName(int item)  const noexcept { return schemaEntries[item].name;}
+    int   getEntries() const noexcept { return schemaEntries.size();}
     void  show();
 
     std::string  getSchemaString();
@@ -90,13 +114,23 @@ class schema {
          schemaEntriesMap = D.schemaEntriesMap;
     }
 };
-
-  class dictionary {
+ 
+ inline int  schema::getEntryOrder(const char *name) const  {
+   if(exists(name))
+     return schemaEntriesMap.at(name);//at needed for const function
+   
+   if(warningCount>0 ) { warningCount--; std::cout<<"Warning , hipo::schema getEntryOrder(const char *name) item :" <<name<<" not found, for bank "<<schemaName<<" data for this item is not valid "<<std::endl;
+   }
+   return 0;
+ }
+ 
+ 
+ class dictionary {
   private:
     std::map<std::string,schema> factory;
   public:
-    dictionary(){};
-    virtual ~dictionary(){};
+    dictionary()= default;;
+    virtual ~dictionary()= default;;
 
     std::vector<std::string> getSchemaList();
     void    addSchema(schema sc){ factory[sc.getName()] = sc;}

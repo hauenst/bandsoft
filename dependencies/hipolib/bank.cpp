@@ -1,13 +1,44 @@
+//******************************************************************************
+//*       ██╗  ██╗██╗██████╗  ██████╗     ██╗  ██╗    ██████╗                  *
+//*       ██║  ██║██║██╔══██╗██╔═══██╗    ██║  ██║   ██╔═████╗                 *
+//*       ███████║██║██████╔╝██║   ██║    ███████║   ██║██╔██║                 *
+//*       ██╔══██║██║██╔═══╝ ██║   ██║    ╚════██║   ████╔╝██║                 *
+//*       ██║  ██║██║██║     ╚██████╔╝         ██║██╗╚██████╔╝                 *
+//*       ╚═╝  ╚═╝╚═╝╚═╝      ╚═════╝          ╚═╝╚═╝ ╚═════╝                  *
+//************************ Jefferson National Lab (2017) ***********************
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ *   Copyright (c) 2017.  Jefferson Lab (JLab). All rights reserved. Permission
+ *   to use, copy, modify, and distribute  this software and its documentation
+ *   for educational, research, and not-for-profit purposes, without fee and
+ *   without a signed licensing agreement.
+ *
+ *   IN NO EVENT SHALL JLAB BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT, SPECIAL
+ *   INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS, ARISING
+ *   OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF JLAB HAS
+ *   BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *   JLAB SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ *   THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ *   PURPOSE. THE HIPO DATA FORMAT SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF
+ *   ANY, PROVIDED HEREUNDER IS PROVIDED "AS IS". JLAB HAS NO OBLIGATION TO
+ *   PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+ *
+ *   This software was developed under the United States Government license.
+ *   For more information contact author at gavalian@jlab.org
+ *   Department of Experimental Nuclear Physics, Jefferson Lab.
+ */
+/*******************************************************************************
+ * File:   bank.cc
+ * Author: gavalian
+ *
+ * Created on April 12, 2017, 10:14 AM
  */
 
 #include "bank.h"
 #include "utils.h"
 
 namespace hipo {
+
   //==============================================================
   // Definition of class structure, this will class will be extended
   // to represent different objects that will be appended to the event
@@ -34,32 +65,29 @@ namespace hipo {
       *reinterpret_cast<uint8_t *>(&structureAddress[3]) = (uint8_t) __type;
       *reinterpret_cast<uint32_t *>(&structureAddress[4]) = __size;
     }
-    /**
-    * returns the size of the structure
-    */
-    int structure::getSize(){
-      int size = *reinterpret_cast<uint32_t *>(structureAddress+4);
-      return size;
-    }
 
     void structure::setSize(int size){
       *reinterpret_cast<uint32_t *>(structureAddress+4) = size;
     }
     // return the type of the structure
     int structure::getType(){
-      int type = (int) (*reinterpret_cast<uint8_t *>(structureAddress+3));
+      auto type = (int) (*reinterpret_cast<uint8_t *>(structureAddress+3));
       return type;
     }
     // returns the group number of the object
     int structure::getGroup(){
-      int group = (int) (*reinterpret_cast<uint16_t *>(structureAddress));
+      auto group = (int) (*reinterpret_cast<uint16_t *>(structureAddress));
       return group;
     }
     // returns the item number of the structure
     int structure::getItem(){
-      int item = (int) (*reinterpret_cast<uint8_t *>(structureAddress+2));
+      auto item = (int) (*reinterpret_cast<uint8_t *>(structureAddress+2));
       return item;
     }
+    void         structure::initNoCopy(const char *buffer, int size){
+        structureAddress = const_cast<char*>(buffer);
+    }
+
     void structure::init(const char *buffer, int size){
       allocate(size);
       memcpy(&structureBuffer[0],buffer,size);
@@ -73,7 +101,7 @@ namespace hipo {
 
     std::string  structure::getStringAt(int index){
         int length = getSize();
-        char *string_ch = (char *) malloc(length+1);
+        auto *string_ch = (char *) malloc(length+1);
         std::memcpy(string_ch, &structureBuffer[8],length);
         string_ch[length] = '\0';
         std::string result = string_ch;
@@ -89,21 +117,20 @@ namespace hipo {
     const char *structure::getAddress(){
       return structureAddress;
     }
+
     //====================================================================
     // END of structure class
     //====================================================================
-bank::bank(){
 
-}
+bank::bank()= default;
 
-bank::~bank(){
-
-}
+bank::~bank()= default;
 
 void    bank::setRows(int rows){
    bankRows = rows;
    int size = bankSchema.getSizeForRows(bankRows);
-   allocate(size+12);
+   initStructureBySize(bankSchema.getGroup(),bankSchema.getItem(), 11, size);
+   //allocate(size+12);
 }
 
 void bank::reset(){
@@ -118,126 +145,6 @@ void bank::notify(){
   //    getSize(),size, bankRows);
 }
 
-int    bank::getInt(int item, int index){
-  int type = bankSchema.getEntryType(item);
-  int offset = bankSchema.getOffset(item, index, bankRows);
-  switch(type){
-    case 1: return (int) getByteAt(offset);
-    case 2: return (int) getShortAt(offset);
-    case 3: return getIntAt(offset);
-    default: printf("---> error : requested INT for [%s] type = %d\n",
-             bankSchema.getEntryName(item).c_str(),type); break;
-  }
-  return 0;
-}
-int    bank::getShort(int item, int index){
-  int type = bankSchema.getEntryType(item);
-  int offset = bankSchema.getOffset(item, index, bankRows);
-  switch(type){
-    case 1: return (int) getByteAt(offset);
-    case 2: return (int) getShortAt(offset);
-    default: printf("---> error : requested SHORT for [%s] type = %d\n",
-             bankSchema.getEntryName(item).c_str(),type); break;
-  }
-  return 0;
-}
-
-int    bank::getByte(int item, int index){
-  int type = bankSchema.getEntryType(item);
-  int offset = bankSchema.getOffset(item, index, bankRows);
-  switch(type){
-    case 1: return (int) getByteAt(offset);
-    default: printf("---> error : requested BYTE for [%s] type = %d\n",
-             bankSchema.getEntryName(item).c_str(),type); break;
-  }
-  return 0;
-}
-float  bank::getFloat(int item, int index){
-  if(bankSchema.getEntryType(item)==4){
-    int offset = bankSchema.getOffset(item, index, bankRows);
-    return getFloatAt(offset);
-  }
-  return 0.0;
-}
-double  bank::getDouble(int item, int index){
-  if(bankSchema.getEntryType(item)==5){
-    int offset = bankSchema.getOffset(item, index, bankRows);
-    return getDoubleAt(offset);
-  }
-  return 0.0;
-}
-
-long bank::getLong(int item, int index){
-  if(bankSchema.getEntryType(item)==8){
-    int offset = bankSchema.getOffset(item, index, bankRows);
-    return getLongAt(offset);
-  }
-  return 0;
-}
-
-int    bank::getInt(const char *name, int index){
-  int item = bankSchema.getEntryOrder(name);
-  int type = bankSchema.getEntryType(item);
-  int offset = bankSchema.getOffset(item, index, bankRows);
-  switch(type){
-    case 1: return (int) getByteAt(offset);
-    case 2: return (int) getShortAt(offset);
-    case 3: return getIntAt(offset);
-    default: printf("---> error : requested INT for [%s] type = %d\n",name,type); break;
-  }
-  return 0;
-}
-
-int    bank::getShort(const char *name, int index){
-  int item = bankSchema.getEntryOrder(name);
-  int type = bankSchema.getEntryType(item);
-  int offset = bankSchema.getOffset(item, index, bankRows);
-  switch(type){
-    case 1: return (int) getByteAt(offset);
-    case 2: return (int) getShortAt(offset);
-    default: printf("---> error : requested SHORT for [%s] type = %d\n",
-             bankSchema.getEntryName(item).c_str(),type); break;
-  }
-  return 0;
-}
-int    bank::getByte(const char *name, int index){
-  int item = bankSchema.getEntryOrder(name);
-  int type = bankSchema.getEntryType(item);
-  int offset = bankSchema.getOffset(item, index, bankRows);
-  switch(type){
-    case 1: return (int) getByteAt(offset);
-    default: printf("---> error : requested BYTE for [%s] type = %d\n",
-             bankSchema.getEntryName(item).c_str(),type); break;
-  }
-  return 0;
-}
-
-float  bank::getFloat(const char *name, int index){
-  int item = bankSchema.getEntryOrder(name);
-  if(bankSchema.getEntryType(item)==4){
-    int offset = bankSchema.getOffset(item, index, bankRows);
-    return getFloatAt(offset);
-  }
-  return 0.0;
-}
-
-double  bank::getDouble(const char *name, int index){
-  int item = bankSchema.getEntryOrder(name);
-  if(bankSchema.getEntryType(item)==5){
-    int offset = bankSchema.getOffset(item, index, bankRows);
-    return getDoubleAt(offset);
-  }
-  return 0.0;
-}
-
-long bank::getLong(const char *name, int index){
-  int item = bankSchema.getEntryOrder(name);
-  if(bankSchema.getEntryType(item)==8){
-    int offset = bankSchema.getOffset(item, index, bankRows);
-    return getLongAt(offset);
-  }
-  return 0;
-}
 
 void    bank::putInt(const char *name, int index, int32_t value){
   int item = bankSchema.getEntryOrder(name);
@@ -284,7 +191,7 @@ void bank::show(){
     printf("%14d : ", i);
     for(int k = 0; k < bankRows; k++){
       if(bankSchema.getEntryType(i) < 4){
-          printf("%8d ",getInt(i,k));
+	  printf("%8d ",getInt(i,k));
         } else if(bankSchema.getEntryType(i)==4) {
           printf("%8.5f ",getFloat(i,k));
         }
