@@ -87,27 +87,6 @@ int main(int argc, char** argv) {
 	double Q2		= 0;
 	double xB		= 0;
 	double W2		= 0;
-	// 	Proton info:
-	int pMult		= 0;
-	double pPid		[maxProtons]= {0.};
-	double pCharge		[maxProtons]= {0.};
-	double pStatus		[maxProtons]= {0.};
-	double pTime		[maxProtons]= {0.};
-	double pBeta		[maxProtons]= {0.};
-	double pChi2pid		[maxProtons]= {0.};
-	double p_vtx		[maxProtons]= {0.};
-	double p_vty		[maxProtons]= {0.};
-	double p_vtz		[maxProtons]= {0.};
-	double p_p		[maxProtons]= {0.};
-	double theta_p		[maxProtons]= {0.};
-	double phi_p		[maxProtons]= {0.};
-	double p_miss		[maxProtons]= {0.};
-	double m_miss		[maxProtons]= {0.};
-	double theta_miss	[maxProtons]= {0.};
-        double phi_miss		[maxProtons]= {0.};
-	double theta_pq		[maxProtons]= {0.};
-	double Wp		[maxProtons]= {0.};
-	double point_miss	[maxProtons]= {0.};
 	// 	Neutron info:
 	int nMult		= 0;
 	int barID		[maxNeutrons]= {0};
@@ -147,26 +126,6 @@ int main(int argc, char** argv) {
 	outTree->Branch("Q2"		,&Q2			);
 	outTree->Branch("xB"		,&xB			);
 	outTree->Branch("W2"		,&W2			);
-	outTree->Branch("pMult"		,&pMult			);
-	outTree->Branch("pPid"		,pPid			,"pPid[pMult]/D"	);
-	outTree->Branch("pCharge"	,pCharge		,"pCharge[pMult]/D"	);
-	outTree->Branch("pStatus"	,pStatus		,"pStatus[pMult]/D"	);
-	outTree->Branch("pTime"		,pTime			,"pTime[pMult]/D"	);
-	outTree->Branch("pBeta"		,pBeta			,"pBeta[pMult]/D"	);
-	outTree->Branch("pChi2pid"	,pChi2pid		,"pChi2pid[pMult]/D"	);
-	outTree->Branch("p_vtx"		,p_vtx			,"p_vtx[pMult]/D"	);
-	outTree->Branch("p_vty"		,p_vty			,"p_vty[pMult]/D"	);
-	outTree->Branch("p_vtz"		,p_vtz			,"p_vtz[pMult]/D"	);
-	outTree->Branch("p_p"		,p_p			,"p_p[pMult]/D"		);
-	outTree->Branch("theta_p"	,theta_p		,"theta_p[pMult]/D"	);
-	outTree->Branch("phi_p"		,phi_p			,"phi_p[pMult]/D"	);
-	outTree->Branch("p_miss"	,p_miss			,"p_miss[pMult]/D"	);
-	outTree->Branch("m_miss"	,m_miss			,"m_miss[pMult]/D"	);
-	outTree->Branch("theta_miss"	,theta_miss		,"theta_miss[pMult]/D"	);
-	outTree->Branch("phi_miss"	,phi_miss		,"phi_miss[pMult]/D"	);
-	outTree->Branch("theta_pq"	,theta_pq		,"theta_pq[pMult]/D"	);
-	outTree->Branch("Wp"		,Wp			,"Wp[pMult]/D"		);
-	outTree->Branch("point_miss"	,point_miss		,"point_miss[pMult]/D"	);
 	outTree->Branch("nMult"		,&nMult			);
 	outTree->Branch("barID"		,&barID			,"barID[nMult]/D"	);
 	outTree->Branch("dL_n"		,&dL_n			,"dL_n[nMult]/D"	);
@@ -240,26 +199,6 @@ int main(int argc, char** argv) {
 			Q2		= 0;
 			xB		= 0;
 			W2		= 0;
-			pMult		= 0;
-			memset(	pPid		,0	,sizeof(pPid		)	);
-			memset(	pCharge		,0	,sizeof(pCharge		)	);
-			memset(	pStatus		,0	,sizeof(pStatus		)	);
-			memset(	pTime		,0	,sizeof(pTime		)	);
-			memset(	pBeta		,0	,sizeof(pBeta		)	);
-			memset(	pChi2pid	,0	,sizeof(pChi2pid	)	);
-			memset(	p_vtx		,0	,sizeof(p_vtx		)	);
-			memset(	p_vty		,0	,sizeof(p_vty		)	);
-			memset(	p_vtz		,0	,sizeof(p_vtz		)	);
-			memset(	p_p		,0	,sizeof(p_p		)	);
-			memset(	theta_p		,0	,sizeof(theta_p		)	);
-			memset(	phi_p		,0	,sizeof(phi_p		)	);
-			memset(	p_miss		,0	,sizeof(p_miss		)	);
-			memset(	m_miss		,0	,sizeof(m_miss		)	);
-			memset(	theta_miss	,0	,sizeof(theta_miss	)	);
-			memset(	phi_miss	,0	,sizeof(phi_miss	)	);
-			memset( theta_pq	,0	,sizeof(theta_pq	)	);
-			memset( Wp		,0	,sizeof(Wp		)	);
-			memset( point_miss	,0	,sizeof(point_miss	)	);
 			nMult		= 0;
 			memset( barID		,0	,sizeof(barID		)	);
 			memset( dL_n		,0	,sizeof(dL_n		)	);
@@ -325,35 +264,6 @@ int main(int argc, char** argv) {
 			W2		= mP*mP - Q2 + 2.*nu*mP;
 			
 			
-			// Grab the proton information:
-			TVector3 pVertex[maxProtons], pMomentum[maxProtons];
-			getProtonInfo( particles, pPid, pMomentum, pVertex, pTime ,pCharge, pBeta, pChi2pid, pStatus, pMult );
-			for( int p = 0 ; p < pMult ; p++ ){
-				p_vtx[p]	= pVertex[p].X();
-				p_vty[p]	= pVertex[p].Y();
-				p_vtz[p]	= pVertex[p].Z();
-				p_p[p]		= pMomentum[p].Mag();
-				theta_p[p]	= pMomentum[p].Theta();
-				phi_p[p]	= pMomentum[p].Phi();
-
-				TVector3 missMomentum; missMomentum = -(pMomentum[p] - qMomentum);
-				p_miss[p]	= missMomentum.Mag();
-				theta_miss[p]	= missMomentum.Theta();
-				phi_miss[p]	= missMomentum.Phi();
-				theta_pq[p]	= qMomentum.Angle(pMomentum[p]);
-
-				double E_p = sqrt( p_p[p]*p_p[p] + mP*mP );
-				m_miss[p] 	= sqrt( pow( nu + mD - E_p , 2 ) - ( q*q + p_p[p]*p_p[p] - 2*q*p_p[p]*cos(theta_pq[p]) ) );
-				if( m_miss[p] != m_miss[p] ) m_miss[p] = 0.;
-
-				double W_primeSq = mD*mD - Q2 + mP*mP + 2.*mD*(nu-E_p) - 2.*nu*E_p + 2.*q*p_p[p]*cos(theta_pq[p]);
-				Wp[p] = sqrt(W_primeSq);
-				if( Wp[p] != Wp[p] ) Wp[p] = 0.;
-
-				point_miss[p] = pointsToBand( theta_miss[p] , phi_miss[p] , p_vtz[p] );
-			}
-
-			
 			// Grab the neutron information:
 			TVector3 nMomentum[maxNeutrons], nPath[maxNeutrons];
 			getNeutronInfo( band_hits, nMult, barID, nEdep, nTime, nPath , starttime );
@@ -364,8 +274,8 @@ int main(int argc, char** argv) {
 				p_n[n]		= 0.;	// no conversion yet for ToF due to missing calibrations	
 			}
 			
-			// Fill tree to do any more plots on the fly
-			outTree->Fill();
+			// Fill tree based on d(e,e'n)X
+			if( nMult == 1 ) outTree->Fill();
 
 		} // end loop over events
 	}// end loop over files
