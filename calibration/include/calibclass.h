@@ -66,10 +66,16 @@ class calibclass
 	private:
 
 		// Holders for timewalk:
-		double parA_L[600] = {0.};		
-		double parB_L[600] = {0.};		
-		double parA_R[600] = {0.};		
-		double parB_R[600] = {0.};		
+		double paradcA_L[600] = {0.};		
+		double paradcB_L[600] = {0.};		
+		double paradcA_R[600] = {0.};		
+		double paradcB_R[600] = {0.};		
+		double parampA_L[600] = {0.};		
+		double parampB_L[600] = {0.};		
+		double parampC_L[600] = {0.};		
+		double parampA_R[600] = {0.};		
+		double parampB_R[600] = {0.};		
+		double parampC_R[600] = {0.};		
 		// Holders for LR offsets:
 		double TDC_TDIFF[600] = {0.};	
 		double FADC_TDIFF[600] = {0.};	

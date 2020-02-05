@@ -71,7 +71,7 @@ int doProj( TH2F * hist , int bin , bool write , int flag , double &x, double &y
 		hist->GetXaxis()->SetRange(bin,bin+step);
 		x = hist->GetMean(1);
 		hist->GetXaxis()->SetRange();
-		TFitResultPtr f = pj->Fit("gaus","QESR","",-1200,300);
+		TFitResultPtr f = pj->Fit("gaus","QESR","",-300,300);
 		y = f->Parameter(1);
 		yE = f->ParError(1);
 		sig = f->Parameter(2);

@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
 	int event_counter = 0;
 	while(reader.next()==true){
 		if(event_counter%10000==0) cout << "event: " << event_counter << endl;
-		//if( event_counter > 100000 ) break;
+		if( event_counter > 100000 ) break;
 		event_counter++;
 
 		// Load data structure for this event
@@ -158,7 +158,7 @@ int main(int argc, char** argv) {
 
 					// Now we could look at the adc plot and try to extract the reflection coefficient
 					zoomTH2F( h2_tdc_tdiff_adc[identifier], 0, 1, 1 ); drawTH2F( h2_tdc_tdiff_adc[identifier] , cSLC_tdc[is][il] , 4*cIdx+3 );
-					double n, n2;
+					double n = 0, n2 = 0;
 					reflectFit( h2_tdc_tdiff_adc[identifier] , cSLC_tdc[is][il] , 4*cIdx+4 , is, il, cIdx , mu, n , n2 );
 				}
 				if( h2_ftdc_tdiff_amp[identifier]->Integral()  ){
@@ -168,7 +168,7 @@ int main(int argc, char** argv) {
 
 					// Now we could look at the adc plot and try to extract the reflection coefficient
 					zoomTH2F( h2_ftdc_tdiff_adc[identifier], 0, 1, 1 ); drawTH2F( h2_ftdc_tdiff_adc[identifier] , cSLC_ftdc[is][il] , 4*cIdx+3 );
-					double n, n2;
+					double n = 0, n2 = 0;
 					reflectFit( h2_ftdc_tdiff_adc[identifier] , cSLC_ftdc[is][il] , 4*cIdx+4 , is, il, cIdx , mu, n , n2 );
 				}
 			}
@@ -257,12 +257,12 @@ void reflectFit( TH2F * hist , TCanvas * c , int cd , int is , int il, int ic, d
 	else if( (is+1)==1 )	 		model = new TF1("atten_reflect",lnR_reflect_med,-150,150,3);
 	else if( (is+1)==2 || (is+1)==5) 	model = new TF1("atten_reflect",lnR_reflect_long,-150,150,3);
 	if( (is+1)==3 || (is+1)==4 ) mu_guess *= (-1);
-	model->FixParameter(0,mu_guess);
+	model->SetParameter(0,mu_guess);
 	//model->SetParLimits(0,mu_guess*0.8,mu_guess*1.2);
 	model->SetParameter(1,0.2);
-	//model->SetParLimits(1,0,1);
+	model->SetParLimits(1,0,1);
 	model->SetParameter(2,0);
-	model->SetParLimits(2,-0.2,0.2);
+	//model->SetParLimits(2,-0.2,0.2);
 	//model->SetParameter(2,0);
 	cout << (is+1) << " " << (il+1) << " " << (ic+1) << "\n";
 	TFitResultPtr ptr = g->Fit(model,"QESR","",-zoom/2.,zoom/2.);
@@ -285,7 +285,8 @@ double lnR_reflect_med( double *x , double *p){
 	// p[1] = alpha
 	double L = BARLENGTHS[0];
 	
-	return p[2] + 2.*var/mu + log(1. + a*exp( -(2*var+L)/mu ) + a*a*exp(-2*L/mu) + a*a*a*exp( -(2*var+3*L)/mu ) ) - log(1. + a*exp( -(-2*var+L)/mu ) + a*a*exp(-2.*L/mu) + a*a*a*exp( -(-2.*var+3*L)/mu  ) );
+	return p[2] + 2.*var/mu + log(1. + a*exp( -(2*var+L)/mu )) - log(1. + a*exp( -(-2*var+L)/mu ));
+	//return p[2] + 2.*var/mu + log(1. + a*exp( -(2*var+L)/mu ) + a*a*exp(-2*L/mu) + a*a*a*exp( -(2*var+3*L)/mu ) ) - log(1. + a*exp( -(-2*var+L)/mu ) + a*a*exp(-2.*L/mu) + a*a*a*exp( -(-2.*var+3*L)/mu  ) );
 	//double A = exp(L/mu)*(a-1) - exp(2.*var/mu)*a;
 	//double B = exp( (L+2*var)/mu )*(a-1) - a;
 	//return log( A / B );
@@ -297,7 +298,8 @@ double lnR_reflect_long( double *x , double *p){
 	// p[0] = mu
 	// p[1] = alpha
 	double L = BARLENGTHS[1];
-	return p[2] + 2.*var/mu + log(1. + a*exp( -(2*var+L)/mu ) + a*a*exp(-2*L/mu) + a*a*a*exp( -(2*var+3*L)/mu ) ) - log(1. + a*exp( -(-2*var+L)/mu ) + a*a*exp(-2.*L/mu) + a*a*a*exp( -(-2.*var+3*L)/mu  ) );
+	return p[2] + 2.*var/mu + log(1. + a*exp( -(2*var+L)/mu )) - log(1. + a*exp( -(-2*var+L)/mu ));
+	//return p[2] + 2.*var/mu + log(1. + a*exp( -(2*var+L)/mu ) + a*a*exp(-2*L/mu) + a*a*a*exp( -(2*var+3*L)/mu ) ) - log(1. + a*exp( -(-2*var+L)/mu ) + a*a*exp(-2.*L/mu) + a*a*a*exp( -(-2.*var+3*L)/mu  ) );
 	//double A = exp(L/mu)*(a-1) - exp(2.*var/mu)*a;
 	//double B = exp( (L+2*var)/mu )*(a-1) - a;
 	//return log( A / B );
@@ -309,7 +311,8 @@ double lnR_reflect_short( double *x , double *p){
 	// p[0] = mu
 	// p[1] = alpha
 	double L = BARLENGTHS[2];
-	return p[2] + 2.*var/mu + log(1. + a*exp( -(2*var+L)/mu ) + a*a*exp(-2*L/mu) + a*a*a*exp( -(2*var+3*L)/mu ) ) - log(1. + a*exp( -(-2*var+L)/mu ) + a*a*exp(-2.*L/mu) + a*a*a*exp( -(-2.*var+3*L)/mu  ) );
+	return p[2] + 2.*var/mu + log(1. + a*exp( -(2*var+L)/mu )) - log(1. + a*exp( -(-2*var+L)/mu ));
+	//return p[2] + 2.*var/mu + log(1. + a*exp( -(2*var+L)/mu ) + a*a*exp(-2*L/mu) + a*a*a*exp( -(2*var+3*L)/mu ) ) - log(1. + a*exp( -(-2*var+L)/mu ) + a*a*exp(-2.*L/mu) + a*a*a*exp( -(-2.*var+3*L)/mu  ) );
 	//double A = exp(L/mu)*(a-1) - exp(2.*var/mu)*a;
 	//double B = exp( (L+2*var)/mu )*(a-1) - a;
 	//return log( A / B );

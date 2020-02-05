@@ -151,7 +151,7 @@ int main(int argc, char** argv) {
 					zoomTH2F( h2_tdc_tdiff_adc[identifier] , 0 , 1, 1 );
 					drawTH2F( h2_tdc_tdiff_adc[identifier] , cSLC_tdc[is][il] ,  3*cIdx+2 );
 					// do projection for l-r and veff:
-					double offset, veff, width;
+					double offset = 0, veff = 0, width = 0;
 					offsetFit( h2_tdc_tdiff_adc[identifier] , cSLC_tdc[is][il] , 3*cIdx+3 , is, il, cIdx , 0 ,offset, veff, width );
 					tdc_off[identifier] = offset;
 					tdc_veff[identifier] = veff;
@@ -164,7 +164,7 @@ int main(int argc, char** argv) {
 					zoomTH2F( h2_ftdc_tdiff_adc[identifier] , 0 , 1 , 1 );
 					drawTH2F( h2_ftdc_tdiff_adc[identifier] , cSLC_ftdc[is][il] ,  3*cIdx+2 );
 					// do projection for l-r and veff:
-					double offset, veff, width;
+					double offset = 0, veff = 0, width = 0;
 					offsetFit( h2_ftdc_tdiff_adc[identifier] , cSLC_ftdc[is][il] , 3*cIdx+3 , is, il, cIdx , 1 ,offset, veff, width );
 					ftdc_off[identifier] = offset;
 					ftdc_veff[identifier] = veff;

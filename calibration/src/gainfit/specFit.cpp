@@ -130,7 +130,7 @@ TApplication *myapp = new TApplication("myapp",0,0);
 			float ADC_adc       = (float)(BAND_ADC.getInt(4,aIdx));
 			float ADC_amp       = (float)(BAND_ADC.getInt(5,aIdx));
 			float ADC_time      = BAND_ADC.getFloat(6,aIdx);
-			//if( ADC_amp >= 4095) continue; //overflow event
+			if( ADC_amp >= 4095) continue; //overflow event
 
 			int barKey = 100*ADC_sector + 10*ADC_layer + ADC_component;
 
@@ -174,7 +174,7 @@ TApplication *myapp = new TApplication("myapp",0,0);
 					h1_adc_spec_L[identifier] -> Draw("COLZ");
 
 					cout << "Fitting slco: " << (is+1) << " " << (il+1) << " " << (cIdx+1) << "\n";
-					if(il != 5){
+					if( h1_adc_spec_L[identifier]->Integral() ){
 						TFitResultPtr Fit_L = doFit(h1_adc_spec_L[identifier]);
 						for(int j = 0; j < 5; j++){
 							if(Fit_L == 0){  parL[identifier][j] = Fit_L->Parameter(j); }
@@ -184,7 +184,7 @@ TApplication *myapp = new TApplication("myapp",0,0);
 					cSLC[is][il] -> cd(2*cIdx+2);
 					gPad -> SetBottomMargin(0.26);
 					h1_adc_spec_R[identifier] -> Draw("COLZ");
-					if(il != 5){
+					if( h1_adc_spec_R[identifier]->Integral() ){
 						TFitResultPtr Fit_R = doFit(h1_adc_spec_R[identifier]);
 						for(int j = 0; j < 5; j++){
 							if(Fit_R == 0){  parR[identifier][j] = Fit_R->Parameter(j); }
@@ -247,8 +247,8 @@ TApplication *myapp = new TApplication("myapp",0,0);
 // ========================================================================================================================================
 TFitResultPtr doFit(TH1F * h1) {
 
-	double land_amp = 4 * (h1->GetMaximum());
-	double land_mean = h1->GetBinCenter(h1->GetMaximumBin());
+	double land_amp = (h1->GetMaximum());
+	double land_mean = 10000;//h1->GetBinCenter(h1->GetMaximumBin());
 	//You can use the mean or the mode for the landau guess
 	//double land_mean = h1_adc_spec_L[i]->GetMean();
 	double land_sigma = h1->GetStdDev();

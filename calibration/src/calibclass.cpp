@@ -128,8 +128,10 @@ void calibclass::CreatePMTs(hipo::bank BAND_ADC, hipo::bank BAND_TDC , double ph
 		// Do timewalk correction:
 		int barKey = 100*TDC_sector + 10*TDC_layer + TDC_component;
 		TDC_tdc = (TDC_order == 0) ? 
-				TDC_tdc -  ( parB_L[barKey] + parA_L[barKey]/sqrt(PMTs[pmtKey].adc) )
-			:	TDC_tdc -  ( parB_R[barKey] + parA_R[barKey]/sqrt(PMTs[pmtKey].adc) ) ;
+				TDC_tdc -  ( parampB_L[barKey] + parampA_L[barKey]/pow(PMTs[pmtKey].amp,parampC_L[barKey]) )
+			:	TDC_tdc -  ( parampB_R[barKey] + parampA_R[barKey]/pow(PMTs[pmtKey].amp,parampC_R[barKey]) ) ;
+		//		TDC_tdc -  ( paradcB_L[barKey] + paradcA_L[barKey]/sqrt(PMTs[pmtKey].adc) )
+		//	:	TDC_tdc -  ( paradcB_R[barKey] + paradcA_R[barKey]/sqrt(PMTs[pmtKey].adc) ) ;
 
 
 		double prevdiff = fabs( PMTs[pmtKey].ftdc - PMTs[pmtKey].tdc );
@@ -212,8 +214,8 @@ void calibclass::CreateBars(){
 void calibclass::LoadTimeWalk(){
 	ifstream f;
 	int sector, layer, component, barId;
-	double parA, parB, temp;
-	f.open("../../include/time_walk_corr_left.txt");
+	double parA, parB, parC, temp;
+	f.open("../../include/time_walk_corr_adc_left.txt");
 	while(!f.eof()){
 		f >> sector;
 		f >> layer;
@@ -221,14 +223,16 @@ void calibclass::LoadTimeWalk(){
 		barId = 100*sector + 10*layer + component;
 		f >> parA;
 		f >> parB;
+		f >> parC;
 		f >> temp;
 		f >> temp;
-		parA_L[barId] = parA;
-		parB_L[barId] = parB;
+		f >> temp;
+		paradcA_L[barId] = parA;
+		paradcB_L[barId] = parB;
 	}
 	f.close();
 
-	f.open("../../include/time_walk_corr_right.txt");
+	f.open("../../include/time_walk_corr_adc_right.txt");
 	while(!f.eof()){
 		f >> sector;
 		f >> layer;
@@ -236,10 +240,48 @@ void calibclass::LoadTimeWalk(){
 		barId = 100*sector + 10*layer + component;
 		f >> parA;
 		f >> parB;
+		f >> parC;
 		f >> temp;
 		f >> temp;
-		parA_R[barId] = parA;
-		parB_R[barId] = parB;
+		f >> temp;
+		paradcA_R[barId] = parA;
+		paradcB_R[barId] = parB;
+	}
+	f.close();
+
+	f.open("../../include/time_walk_corr_amp_left.txt");
+	while(!f.eof()){
+		f >> sector;
+		f >> layer;
+		f >> component;
+		barId = 100*sector + 10*layer + component;
+		f >> parA;
+		f >> parB;
+		f >> parC;
+		f >> temp;
+		f >> temp;
+		f >> temp;
+		parampA_L[barId] = parA;
+		parampB_L[barId] = parB;
+		parampC_L[barId] = parC;
+	}
+	f.close();
+
+	f.open("../../include/time_walk_corr_amp_right.txt");
+	while(!f.eof()){
+		f >> sector;
+		f >> layer;
+		f >> component;
+		barId = 100*sector + 10*layer + component;
+		f >> parA;
+		f >> parB;
+		f >> parC;
+		f >> temp;
+		f >> temp;
+		f >> temp;
+		parampA_R[barId] = parA;
+		parampB_R[barId] = parB;
+		parampC_R[barId] = parC;
 	}
 	f.close();
 	return;

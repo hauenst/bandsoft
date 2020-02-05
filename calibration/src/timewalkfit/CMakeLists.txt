@@ -6,7 +6,7 @@ include_directories(${INCLUDES})
 add_executable(timewalk timewalk.cpp ../calibclass.cpp ../helpers.cpp )
 target_link_libraries(timewalk ${ROOT_LIBRARIES} Hipo4 Banks4 )
 
-add_executable(test_walk test_walk.cpp )
+add_executable(test_walk test_walk.cpp ../calibclass.cpp ../helpers.cpp )
 target_link_libraries(test_walk ${ROOT_LIBRARIES} Hipo4 Banks4 )
 
 install( TARGETS timewalk

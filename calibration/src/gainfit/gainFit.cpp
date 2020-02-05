@@ -69,7 +69,7 @@ int main(int argc, char ** argv)
 		if (inFile.is_open() == true){
 			while ( inFile >> sector >> layer >> component >> order >> hv >> mean >> sigma ) {
 
-				if( layer == 6 ) continue;
+				if( layer != 6 ) continue;
 
 				hv /= quenchFact;
 
