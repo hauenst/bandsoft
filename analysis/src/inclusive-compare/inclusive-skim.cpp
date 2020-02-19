@@ -32,15 +32,16 @@ void getElectronInfo( BParticle particles, int& pid, TVector3& momentum, TVector
 bool checkElectron( int pid, TVector3 momentum, TVector3 vertex, double time, int charge, double beta, double chi2pid, int status,
 			double lV, double lW , double E_tot);
 
+int getRunNumber( string filename );
 int main(int argc, char** argv) {
 	// check number of arguments
-	if( argc < 3 ){
-		cerr << "Incorrect number of arugments. Instead use:\n\t./code [outputFile] [inputFile]\n\n";
+	if( argc < 4 ){
+		cerr << "Incorrect number of arugments. Instead use:\n\t./code [simulation=0 or data=1] [outputFile] [inputFile]\n\n";
 		return -1;
 	}
 
 	// Create output tree
-	TFile * outFile = new TFile(argv[1],"RECREATE");
+	TFile * outFile = new TFile(argv[2],"RECREATE");
 	TTree * outTree = new TTree("skim","Inclusive Sample");
 	//	Event info:
 	double Ebeam		= 0;
@@ -74,6 +75,7 @@ int main(int argc, char** argv) {
 	double Q2		= 0;
 	double xB		= 0;
 	double W2		= 0;
+	double weight		= 1;
 	outTree->Branch("Ebeam"		,&Ebeam			);
 	outTree->Branch("gated_charge"	,&gated_charge		);
 	outTree->Branch("livetime"	,&livetime		);
@@ -104,14 +106,22 @@ int main(int argc, char** argv) {
 	outTree->Branch("Q2"		,&Q2			);
 	outTree->Branch("xB"		,&xB			);
 	outTree->Branch("W2"		,&W2			);
+	outTree->Branch("weight"	,&weight		);
 
 	// Connect to the RCDB
 	rcdb::Connection connection("mysql://rcdb@clasdb.jlab.org/rcdb");
-
+	int choice = atoi(argv[1]);
+	
 	// Load input file
-	for( int i = 2 ; i < argc ; i++ ){
+	for( int i = 3 ; i < argc ; i++ ){
 		// Using run number of current file, grab the beam energy from RCDB
-		Ebeam = 10.6; // [GeV] 
+		if( choice == 0 )
+			Ebeam = 10.6; // [GeV] 
+		else if( choice == 1){
+			int runNum = getRunNumber(argv[i]);
+			auto cnd = connection.GetCondition(runNum, "beam_energy");
+			Ebeam = cnd->ToDouble() / 1000.; // [GeV] -- conversion factor due to miscalibration in RCDB
+		}
 
 		// Setup hipo reading for this file
 		TString inputFile = argv[i];
@@ -124,6 +134,7 @@ int main(int argc, char** argv) {
 		BParticle	particles		(factory.getSchema("REC::Particle"	));
 		BCalorimeter	calorimeter		(factory.getSchema("REC::Calorimeter"	));
 		BScintillator	scintillator		(factory.getSchema("REC::Scintillator"	));
+		hipo::bank	mc_event_info		(factory.getSchema("MC::Event"		));
 		hipo::event 	readevent;
 		
 		// Loop over all events in file
@@ -131,6 +142,7 @@ int main(int argc, char** argv) {
 		gated_charge = 0;
 		livetime	= 0;
 		while(reader.next()==true){
+			if(event_counter > 10000) break;
 			// Clear all branches
 			starttime 	= 0;
 			ePid		= 0;
@@ -159,6 +171,7 @@ int main(int argc, char** argv) {
 			Q2		= 0;
 			xB		= 0;
 			W2		= 0;
+			weight		= 1;
 
 			// Count events
 			if(event_counter%10000==0) cout << "event: " << event_counter << endl;
@@ -171,6 +184,7 @@ int main(int argc, char** argv) {
 			readevent.getStructure(particles);
 			readevent.getStructure(calorimeter);
 			readevent.getStructure(scintillator);
+			readevent.getStructure(mc_event_info);
 
 			// Get integrated charge, livetime and start-time from REC::Event
 			if( event_info.getRows() == 0 ) continue;
@@ -207,7 +221,11 @@ int main(int argc, char** argv) {
 			xB		= Q2 / (2.*mP*nu);
 			W2		= mP*mP - Q2 + 2.*nu*mP;
 			
-			
+			// For simulated events, get the weight for the event		
+			if( choice == 0 ){
+				weight = mc_event_info.getFloat(3,0);
+			}
+
 			// Fill tree to do any more plots on the fly
 			outTree->Fill();
 
@@ -271,4 +289,12 @@ bool checkElectron( int pid, TVector3 momentum, TVector3 vertex, double time, in
 	//if( E_tot / momentum.Mag() < 0.15 || E_tot / momentum.Mag() > 0.3 ) return false;
 
 	return true;
+}
+
+int getRunNumber( string filename ){
+	string parsed = filename.substr( filename.find("inc") );
+	string moreparse = parsed.substr(6,8);
+	cout << filename << " " << parsed << "\n";
+	cout << moreparse << " " << stoi(moreparse) << "\n\n";
+        return stoi(moreparse);
 }
