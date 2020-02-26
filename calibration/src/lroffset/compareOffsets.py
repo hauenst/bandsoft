@@ -11,6 +11,8 @@ l_veff_ftdc = [];
 l_off_tdc = []; 
 l_off_ftdc = [];
 IDs = [];
+l_ID = [];
+s_ID = [];
 veff_tdc = [];
 veff_ftdc = [];
 off_tdc = [];
@@ -24,9 +26,11 @@ with open("../../include/effective_velocity.txt","rb") as f, open("../../include
 		if( int(parse[0]) == 3 or int(parse[0]) == 4):
 			s_veff_tdc.append( float(parse[3]) )
 			s_veff_ftdc.append( float(parse[4]) )
+			s_ID.append(ID)
 		else:
 			l_veff_tdc.append( float(parse[3]) )
 			l_veff_ftdc.append( float(parse[4]) )
+			l_ID.append(ID)
 	for line in g:
 		parse = line.strip().split("\t")
 		if( parse[3]==0 or parse[4]==0): continue
@@ -67,5 +71,19 @@ plt.grid(True)
 plt.tight_layout()
 plt.savefig("eff_vel_individual.pdf")
 
+plt.figure(3)
+plt.scatter(s_ID,s_veff_tdc,color='red',label='Short bars')
+plt.scatter(l_ID,l_veff_tdc,color='blue',label='Long bars')
+plt.xlabel('ID [a.u.]',fontsize=16)
+plt.xlim([50,600])
+plt.ylabel("Effective Velocity [cm/ns]",fontsize=16)
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+plt.legend(numpoints=1,loc=2)
+plt.grid(True)
+plt.tight_layout()
+plt.savefig("eff_vel.pdf")
+
+plt.show()
 
 plt.show()
