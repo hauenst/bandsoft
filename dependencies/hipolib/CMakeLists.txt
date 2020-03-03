@@ -1,9 +1,11 @@
 project(hipolib)
 
-set(INCLUDES ${LZ4_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/dependencies/include )
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+set(INCLUDES ${LZ4_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/dependencies/hipolib )
 include_directories(${INCLUDES})
 
 add_library(Hipo4 
-		bank.cpp dictionary.cpp event.cpp reader.cpp record.cpp recordbuilder.cpp utils.cpp wrapper.cpp writer.cpp )
+		bank.cpp dictionary.cpp reader.cpp record.cpp recordbuilder.cpp utils.cpp wrapper.cpp writer.cpp event.cpp )
 
 target_link_libraries(Hipo4 ${LZ4_LIBRARY} )

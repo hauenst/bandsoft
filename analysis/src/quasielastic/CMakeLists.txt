@@ -1,7 +1,7 @@
 find_package(MySQL REQUIRED)
 add_definitions(-DRCDB_MYSQL)
 
-set(INCLUDES ${ROOT_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/dependencies/include ${CMAKE_SOURCE_DIR}/analysis/include ${MYSQL_INCLUDE_DIR} )
+set(INCLUDES ${ROOT_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/dependencies/include ${CMAKE_SOURCE_DIR}/dependencies/hipolib ${CMAKE_SOURCE_DIR}/analysis/include ${MYSQL_INCLUDE_DIR})
 
 include_directories(${INCLUDES})
 add_executable(eepler eepler.cpp )

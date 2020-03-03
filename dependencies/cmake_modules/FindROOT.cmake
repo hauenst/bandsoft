@@ -126,7 +126,8 @@ IF (ROOT_FOUND)
     OUTPUT_VARIABLE ROOT_LIBRARIES)
   SEPARATE_ARGUMENTS(ROOT_LIBRARIES)
 
-  LIST(APPEND ROOT_LIBRARIES -lEG -lThread -lSpectrum -lGeom -lXMLIO -lXMLParser -lTreePlayer -lVMC -lRGL -lGed -lEve -lMinuit)
+  #LIST(APPEND ROOT_LIBRARIES -lEG -lThread -lSpectrum -lGeom -lXMLIO -lXMLParser -lTreePlayer -lVMC -lRGL -lGed -lEve -lMinuit)
+  LIST(APPEND ROOT_LIBRARIES -lEG -lThread -lSpectrum -lGeom -lXMLIO -lXMLParser -lTreePlayer -lRGL -lGed -lEve -lMinuit)
 
   # Make variables changeble to the advanced user
   MARK_AS_ADVANCED( ROOT_LIBRARY_DIR ROOT_INCLUDE_DIR ROOT_DEFINITIONS)
