@@ -57,6 +57,7 @@ int main(int argc, char** argv) {
 	double eChi2pid		= 0;
 	double E_tot		= 0;
 	double E_pcal		= 0;
+	int eSector		= 0;
 	double t_e		= 0;
 	double dL_e		= 0;
 	double lU		= 0;
@@ -88,6 +89,7 @@ int main(int argc, char** argv) {
 	outTree->Branch("eChi2pid"	,&eChi2pid		);
 	outTree->Branch("E_tot"		,&E_tot			);
 	outTree->Branch("E_pcal"	,&E_pcal		);
+	outTree->Branch("eSector"	,&eSector		);
 	outTree->Branch("t_e"		,&t_e			);
 	outTree->Branch("dL_e"		,&dL_e			);
 	outTree->Branch("lU"		,&lU			);
@@ -142,7 +144,7 @@ int main(int argc, char** argv) {
 		gated_charge = 0;
 		livetime	= 0;
 		while(reader.next()==true){
-			if(event_counter > 100100) break;
+			//if(event_counter > 100100) break;
 			// Clear all branches
 			starttime 	= 0;
 			ePid		= 0;
@@ -153,6 +155,7 @@ int main(int argc, char** argv) {
 			eChi2pid	= 0;
 			E_tot		= 0;
 			E_pcal		= 0;
+			eSector		= 0;
 			t_e		= 0;
 			dL_e		= 0;
 			lU		= 0;
@@ -200,6 +203,7 @@ int main(int argc, char** argv) {
 			dL_e	= scintillator.getPath(0);
 			E_tot 	= calorimeter.getTotE(0);
 			E_pcal 	= calorimeter.getPcalE(0);
+			eSector = calorimeter.getSector(0);
 			lU	= calorimeter.getLU(0);
 			lV	= calorimeter.getLV(0);
 			lW	= calorimeter.getLW(0);
