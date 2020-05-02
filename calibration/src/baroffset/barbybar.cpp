@@ -61,18 +61,23 @@ int main(int argc, char** argv) {
 	TH2F ** h2_tdc_tmean_gmamp = new TH2F * [nHistos];
 	TH2F ** h2_ftdc_tmean_gmamp = new TH2F * [nHistos];
 	for(int i = 0 ; i < nHistos ; i++){
-		h2_tdc_tmean_gmadc[i] = new TH2F(Form("h2_tdc_tmean_gmadc_%i",i),"	;sqrt(ADC_{L}*ADC_{R});(t_{TDC,L}+t_{TDC,R})/2. - ref  [ns]	",		500,0,20000,800,-20,20);
-		h2_tdc_tmean_gmamp[i] = new TH2F(Form("h2_tdc_tmean_gmamp_%i",i),"	;sqrt(AMP_{L}*AMP_{R});(t_{TDC,L}+t_{TDC,R})/2. - ref  [ns]	",		500,0,5000, 800,-20,20);
+		//h2_tdc_tmean_gmadc[i] = new TH2F(Form("h2_tdc_tmean_gmadc_%i",i),"	;sqrt(ADC_{L}*ADC_{R});(t_{TDC,L}+t_{TDC,R})/2. - ref  [ns]	",		500,0,20000,800,1200,1400);
+		//h2_tdc_tmean_gmamp[i] = new TH2F(Form("h2_tdc_tmean_gmamp_%i",i),"	;sqrt(AMP_{L}*AMP_{R});(t_{TDC,L}+t_{TDC,R})/2. - ref  [ns]	",		500,0,5000, 800,1200,1400);
+                //                                                                                              
+		//h2_ftdc_tmean_gmadc[i] = new TH2F(Form("h2_ftdc_tmean_gmadc_%i",i),"	;sqrt(ADC_{L}*ADC_{R});(t_{FADC,L}+t_{FADC,R})/2. - ref  [ns]	",		500,0,20000,800,100,300);
+		//h2_ftdc_tmean_gmamp[i] = new TH2F(Form("h2_ftdc_tmean_gmamp_%i",i),"	;sqrt(AMP_{L}*AMP_{R});(t_{FADC,L}+t_{FADC,R})/2. - ref  [ns]	",		500,0,5000, 800,100,300);
+		h2_tdc_tmean_gmadc[i] = new TH2F(Form("h2_tdc_tmean_gmadc_%i",i),"	;sqrt(ADC_{L}*ADC_{R});(t_{TDC,L}+t_{TDC,R})/2. - ref  [ns]	",		50,0,20000,100,-5,5);
+		h2_tdc_tmean_gmamp[i] = new TH2F(Form("h2_tdc_tmean_gmamp_%i",i),"	;sqrt(AMP_{L}*AMP_{R});(t_{TDC,L}+t_{TDC,R})/2. - ref  [ns]	",		50,0,5000, 100,-5,5);
                                                                                                               
-		h2_ftdc_tmean_gmadc[i] = new TH2F(Form("h2_ftdc_tmean_gmadc_%i",i),"	;sqrt(ADC_{L}*ADC_{R});(t_{FADC,L}+t_{FADC,R})/2. - ref  [ns]	",		500,0,20000,800,-20,20);
-		h2_ftdc_tmean_gmamp[i] = new TH2F(Form("h2_ftdc_tmean_gmamp_%i",i),"	;sqrt(AMP_{L}*AMP_{R});(t_{FADC,L}+t_{FADC,R})/2. - ref  [ns]	",		500,0,5000, 800,-20,20);
+		h2_ftdc_tmean_gmadc[i] = new TH2F(Form("h2_ftdc_tmean_gmadc_%i",i),"	;sqrt(ADC_{L}*ADC_{R});(t_{FADC,L}+t_{FADC,R})/2. - ref  [ns]	",		50,0,20000,100,-5,5);
+		h2_ftdc_tmean_gmamp[i] = new TH2F(Form("h2_ftdc_tmean_gmamp_%i",i),"	;sqrt(AMP_{L}*AMP_{R});(t_{FADC,L}+t_{FADC,R})/2. - ref  [ns]	",		50,0,5000, 100,-5,5);
 	}
 
 	// Loop over all events in file
 	int event_counter = 0;
 	while(reader.next()==true){
 		if(event_counter%10000==0) cout << "event: " << event_counter << endl;
-		if( event_counter > 150000 ) break;
+		//if( event_counter > 200000 ) break;
 		event_counter++;
 
 		// Load data structure for this event
@@ -105,6 +110,11 @@ int main(int argc, char** argv) {
 		std::map<int,double> ftdc_tmean = BAND->GetBars_FADC_tMean();
 		std::map<int,double> adc = BAND->GetBars_FADC_gmAdc();
 		std::map<int,double> amp = BAND->GetBars_FADC_gmAmp();
+		// Access information we need from pmts
+		std::map<int,double> adc_pmt = BAND->GetPMTs_FADC_adc();
+		std::map<int,double> amp_pmt = BAND->GetPMTs_FADC_amp();
+		std::map<int,double> ftdc_pmt = BAND->GetPMTs_FADC_time();
+		std::map<int,double> tdc_pmt = BAND->GetPMTs_TDC_time();
 
 		// Loop through maps and fill our histograms:
 		std::map<int,double>::iterator iter_bar;
@@ -115,6 +125,7 @@ int main(int argc, char** argv) {
 			int sector = (barKey - component - layer*10)/100 % 10;
 
 			int ref_bar = 200 + layer*10 + 1;
+			int ref_photodiode = 4161;
 			if( 	tdc_tmean.count(ref_bar) == 0 || ftdc_tmean.count(ref_bar) == 0 ||
 				adc.count(ref_bar) == 0 || amp.count(ref_bar) == 0 ) continue;
 
@@ -122,6 +133,10 @@ int main(int argc, char** argv) {
 			h2_tdc_tmean_gmadc[barKey] -> Fill (  adc[barKey] , tdc_tmean[barKey]  - tdc_tmean[ref_bar]  );
 			h2_ftdc_tmean_gmamp[barKey] -> Fill ( amp[barKey] , ftdc_tmean[barKey] - ftdc_tmean[ref_bar] );
 			h2_ftdc_tmean_gmadc[barKey] -> Fill ( adc[barKey] , ftdc_tmean[barKey] - ftdc_tmean[ref_bar] );
+			//h2_tdc_tmean_gmamp[barKey] -> Fill (  amp[barKey] , tdc_tmean[barKey]  - tdc_pmt[ref_photodiode]  );
+			//h2_tdc_tmean_gmadc[barKey] -> Fill (  adc[barKey] , tdc_tmean[barKey]  - tdc_pmt[ref_photodiode]  );
+			//h2_ftdc_tmean_gmamp[barKey] -> Fill ( amp[barKey] , ftdc_tmean[barKey] - ftdc_pmt[ref_photodiode] );
+			//h2_ftdc_tmean_gmadc[barKey] -> Fill ( adc[barKey] , ftdc_tmean[barKey] - ftdc_pmt[ref_photodiode] );
 		}
 
 	} // end loop over events
@@ -151,14 +166,16 @@ int main(int argc, char** argv) {
 			for(int cIdx = 0 ; cIdx < slc[il][is] ; cIdx++){
 				int identifier = 100*(is+1)+10*(il+1)+(cIdx+1);
 				if( h2_tdc_tmean_gmamp[identifier]->Integral()  ){
-					zoomTH2F( h2_tdc_tmean_gmadc[identifier], 10000, 1.5, 1.5 );	drawTH2F( h2_tdc_tmean_gmadc[identifier], cSLC_tdc[is][il]   , 3*cIdx+1 );
-					zoomTH2F( h2_tdc_tmean_gmamp[identifier], 2000, 1.5, 1.5 ); 	drawTH2F( h2_tdc_tmean_gmamp[identifier], cSLC_tdc[is][il]   , 3*cIdx+2 );
+					zoomTH2F( h2_tdc_tmean_gmadc[identifier], 10000, 2, 2 );	drawTH2F( h2_tdc_tmean_gmadc[identifier], cSLC_tdc[is][il]   , 3*cIdx+1 );
+					zoomTH2F( h2_tdc_tmean_gmamp[identifier], 2000, 2, 2 ); 	drawTH2F( h2_tdc_tmean_gmamp[identifier], cSLC_tdc[is][il]   , 3*cIdx+2 );
+					cout << "tdc " << identifier << "\n";
 					double temp;
 					fitOffset( h2_tdc_tmean_gmadc[identifier], cSLC_tdc[is][il], 3*cIdx+3, temp, temp, temp, temp );
 				}
 				if( h2_ftdc_tmean_gmamp[identifier]->Integral()  ){
-					zoomTH2F( h2_ftdc_tmean_gmadc[identifier], 10000, 1.5, 1.5 );	drawTH2F( h2_ftdc_tmean_gmadc[identifier], cSLC_ftdc[is][il]   , 3*cIdx+1 );
-					zoomTH2F( h2_ftdc_tmean_gmamp[identifier], 2000, 1.5, 1.5 ); 	drawTH2F( h2_ftdc_tmean_gmamp[identifier], cSLC_ftdc[is][il]   , 3*cIdx+2 );
+					zoomTH2F( h2_ftdc_tmean_gmadc[identifier], 10000, 10, 10 );	drawTH2F( h2_ftdc_tmean_gmadc[identifier], cSLC_ftdc[is][il]   , 3*cIdx+1 );
+					zoomTH2F( h2_ftdc_tmean_gmamp[identifier], 2000, 10, 10 ); 	drawTH2F( h2_ftdc_tmean_gmamp[identifier], cSLC_ftdc[is][il]   , 3*cIdx+2 );
+					cout << "ftdc " << identifier << "\n";
 					double temp;
 					fitOffset( h2_ftdc_tmean_gmadc[identifier], cSLC_ftdc[is][il], 3*cIdx+3, temp, temp, temp, temp );
 				}
@@ -174,6 +191,18 @@ int main(int argc, char** argv) {
 	c0 -> Print(Form("tdc_%s)",outputName.Data()));
 	c1 -> Print(Form("ftdc_%s)",outputName.Data()));
 
+
+	ofstream hist;
+	hist.open("th2d_offset.txt");
+	for(int binx = 0 ; binx < h2_tdc_tmean_gmamp[132]->GetXaxis()->GetNbins(); binx++){
+		for(int biny = 0 ; biny < h2_tdc_tmean_gmamp[132]->GetYaxis()->GetNbins(); biny++){
+			hist << h2_tdc_tmean_gmamp[132]->GetXaxis()->GetBinCenter(binx) << " " <<
+				h2_tdc_tmean_gmamp[132]->GetYaxis()->GetBinCenter(biny) << " " << 
+				h2_tdc_tmean_gmamp[132]->GetBinContent(binx,biny) << "\n";
+		}
+	}
+
+
 	return 0;
 }
 
@@ -184,10 +213,15 @@ void fitOffset(TH2F * hist , TCanvas * c, int cd, double &par1, double &par2 , d
 	std::vector<double> yErrs;
 	std::vector<double> res;
 	std::vector<double> resErrs;
-	offsetCorr( &xs, &xErrs, &ys, &yErrs, &res, &resErrs, 4000, hist );
+	offsetCorr( &xs, &xErrs, &ys, &yErrs, &res, &resErrs, 1000, hist );
 
 	int dim = xs.size();
-	TGraphErrors *g = new TGraphErrors(dim, &xs[0], &ys[0], &xErrs[0], &res[0]);
+	TGraphErrors *g = new TGraphErrors(dim, &xs[0], &res[0], &xErrs[0], &resErrs[0]);
+//	for( int i = 0 ; i < xs.size() ; i++){
+//		cout << xs[i] << " " << res[i] << " " << resErrs[i] << "\n";
+//	}
+	
+
 	//TF1 * model = new TF1("timeWalk",wlk,0,20000,2);
 	//TFitResultPtr ptr = g->Fit(model,"QES");
 	//par1 = ptr->Parameter(0);

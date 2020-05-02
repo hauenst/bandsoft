@@ -255,6 +255,16 @@ int main(int argc, char** argv) {
 	//c1 -> Print(Form("ftdc_%s)",outputName.Data()));
 	c2 -> Print(Form("amp_%s)",outputName.Data()));
 	
+	ofstream th2d ;
+	th2d.open("th2d_post_outfile.txt");
+	for( int binx = 1; binx < h2_tdc_amp_L[354]->GetXaxis()->GetNbins() ; binx++ ){
+		for( int biny = 1; biny < h2_tdc_amp_L[354]->GetYaxis()->GetNbins() ; biny++ ){
+			th2d << h2_tdc_amp_L[354]->GetXaxis()->GetBinCenter(binx) << " " << 
+				h2_tdc_amp_L[354]->GetYaxis()->GetBinCenter(biny) << " " << 
+				h2_tdc_amp_L[354]->GetBinContent(binx,biny) << "\n";
+		}	
+	}
+	th2d.close();
 	/*
 	// Print out the results
 	ofstream tabL, tabR;

@@ -113,6 +113,7 @@ TApplication *myapp = new TApplication("myapp",0,0);
 		//The number of hits in each bank is determined by the function "getRows()" and not by "getSize" as before.
 
 		if(event_counter%1000000==0) cout << "event: " << event_counter << endl;
+		//if(event_counter==2000000) break;
 
 		event_counter++;	
 		int nADC = BAND_ADC.getRows();
@@ -241,6 +242,16 @@ TApplication *myapp = new TApplication("myapp",0,0);
 		}
 	}
 	outText.close();
+
+
+	// Spit out one histogram to text for plotting in python to make pretty:
+	int bins = h1_adc_spec_L[431]->GetXaxis()->GetNbins();
+	cout << "\n";
+	for( int bin = 1 ; bin < bins ; bin++ ){
+		cout << h1_adc_spec_L[431]->GetXaxis()->GetBinCenter(bin) << " " << h1_adc_spec_L[431]->GetBinContent(bin) << "\n";
+	}
+	cout << "\n";
+
 
 	return 0;
 }

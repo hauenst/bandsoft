@@ -48,37 +48,50 @@ int main( int argc, char** argv){
 	TFile * outFile = new TFile(argv[5],"RECREATE");
 
 	// Prep histograms for the background spectrum, and source spectra
-	TH1D * baHist = new TH1D("baHist","baHist",750,0,30000);
-	TH1D * coHist = new TH1D("coHist","coHist",750,0,30000);
+	//TH1D * baHist = new TH1D("baHist","baHist",750,0,30000);
+	//TH1D * coHist = new TH1D("coHist","coHist",750,0,30000);
+	////TH1D * coHist = new TH1D("coHist","coHist",5000,-5,5);
+	//TH1D * csHist = new TH1D("csHist","csHist",750,0,30000);
+	//TH1D * naHist = new TH1D("naHist","naHist",750,0,30000);
+	TH1D * baHist = new TH1D("baHist","baHist",750,0,4000);
+	TH1D * coHist = new TH1D("coHist","coHist",750,0,4000);
 	//TH1D * coHist = new TH1D("coHist","coHist",5000,-5,5);
-	TH1D * csHist = new TH1D("csHist","csHist",750,0,30000);
-	TH1D * naHist = new TH1D("naHist","naHist",750,0,30000);
+	TH1D * csHist = new TH1D("csHist","csHist",750,0,4000);
+	TH1D * naHist = new TH1D("naHist","naHist",750,0,4000);
 	
 
 	// Read in files and store relevant histograms
 	readFile( inputBa, baHist );
 	readFile( inputCo, coHist );
 	//readFile( inputCs, csHist );
-	readFile( inputNa, naHist );
+	//readFile( inputNa, naHist );
 
 	// Subtract background from all source files:
 	backgroundSubtract( coHist, baHist );
-	backgroundSubtract( naHist, baHist );
+	//backgroundSubtract( naHist, baHist );
 	//backgroundSubtract( csHist, baHist );
 
 	//// Try both methods for cobalt edge:
-	TCanvas * coFitResult = (TCanvas *) cobaltEdge( coHist );
+	//TCanvas * coFitResult = (TCanvas *) cobaltEdge( coHist );
 	//TCanvas * naFitResult = (TCanvas *) sodiumEdge( naHist );
 	//TGraph * coDeri = (TGraph*) histDerivative( coHist , baHist );
 
+	ofstream hist;
+	hist.open("th1d_cobalt.txt");
+	for( int binx = 0 ; binx < coHist->GetXaxis()->GetNbins() ; binx++){
+		hist << coHist->GetXaxis()->GetBinCenter(binx) << " " << 
+			coHist->GetBinContent(binx) << "\n";
+	}
+	hist.close();
+
 	outFile->cd();
 	//coDeri->Write();
-	coFitResult->Write();
+	//coFitResult->Write();
 	//naFitResult->Write();
 	baHist->Write();
 	coHist->Write();
-	csHist->Write();
-	naHist->Write();
+	//csHist->Write();
+	//naHist->Write();
 	outFile->Close();
 
 	return 0;
@@ -113,7 +126,6 @@ void readFile( TString inputFile, TH1D * hist ){
 		int nTDC = BAND_TDC.getRows();
 		// We should expect 2 ADC and 2 TDC for a good source hit:
 		if( !(nADC == 2 && nTDC == 2) ) continue;
-		
 		// Grab ADC info
 		int adc_barKey = 0;
 		double adcL, tFadcL, adcR, tFadcR = 0;
@@ -122,15 +134,16 @@ void readFile( TString inputFile, TH1D * hist ){
 			adc_barKey = getKey( BAND_ADC, aIdx );
 			int   ADC_order     = BAND_ADC.getInt  (3,aIdx);
 			if( ADC_order == 0 ){
-				adcL 	= 	BAND_ADC.getInt(4,aIdx);
-				tFadcL	= 	BAND_ADC.getFloat(5,aIdx);
+				adcL 	= 	BAND_ADC.getInt(5,aIdx);
+				//adcL 	= 	BAND_ADC.getInt(4,aIdx);
+				tFadcL	= 	BAND_ADC.getFloat(6,aIdx);
 			}
 			else if( ADC_order == 1 ){
-				adcR	= 	BAND_ADC.getInt(4,aIdx);
-				tFadcR 	= BAND_ADC.getFloat(5,aIdx);
+				adcR	= 	BAND_ADC.getInt(5,aIdx);
+				//adcR	= 	BAND_ADC.getInt(4,aIdx);
+				tFadcR 	= BAND_ADC.getFloat(6,aIdx);
 			}
 		}
-	
 		// Grab TDC info
 		int tdc_barKey = 0;
 		double tTdcL, tTdcR = 0;
@@ -141,10 +154,8 @@ void readFile( TString inputFile, TH1D * hist ){
 			if( TDC_order == 0 ) tTdcL = BAND_TDC.getInt(4,tIdx)*0.02345;
 			else if( TDC_order == 1 ) tTdcR = BAND_TDC.getInt(4,tIdx)*0.02345;
 		}
-		
 		// Check that everything is non-zero for a good event:
 		if( adcL == 0 || adcR == 0 || tFadcL == 0 || tFadcR == 0 || tTdcL == 0 || tTdcR == 0 ) continue;
-		
 		if( fabs(tFadcL - tFadcR - FADC_TDIFF[adc_barKey] ) > 4 ) continue;
 		if( fabs(tTdcL - tTdcR - TDC_TDIFF[tdc_barKey] ) > 4 ) continue;
 		hist->Fill( sqrt(adcL*adcR) );
@@ -175,8 +186,10 @@ double gaus_edge( double *x, double *p){
 
 TGraph * histDerivative( TH1D * hist , TH1D * back ){
 	// Do background subtraction, normalizing the cosmic peaks
-	double background = back->Integral( back->FindBin(13000),back->FindBin(22000) );
-	double signal = hist->Integral( hist->FindBin(13000),hist->FindBin(22000) );
+	//double background = back->Integral( back->FindBin(13000),back->FindBin(22000) );
+	//double signal = hist->Integral( hist->FindBin(13000),hist->FindBin(22000) );
+	double background = back->Integral( back->FindBin(1800),back->FindBin(3000) );
+	double signal = hist->Integral( hist->FindBin(1800),hist->FindBin(3000) );
 	back->Scale( signal / background );
 	hist->Add( back, -1 );
 

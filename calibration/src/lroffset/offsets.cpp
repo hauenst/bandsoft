@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
 	int event_counter = 0;
 	while(reader.next()==true){
 		if(event_counter%10000==0) cout << "event: " << event_counter << endl;
-		if( event_counter > 100000 ) break;
+		//if( event_counter > 100000 ) break;
 		event_counter++;
 
 		// Load data structure for this event
@@ -198,6 +198,29 @@ int main(int argc, char** argv) {
 	}
 	tabL.close();
 	tabR.close();
+
+	ofstream outfile;
+	outfile.open("th2d_atten_lroffset.txt");
+	for( int binx = 1; binx < h2_tdc_tdiff_adc[254]->GetXaxis()->GetNbins() ; binx++){
+		for( int biny = 1; biny < h2_tdc_tdiff_adc[254]->GetYaxis()->GetNbins() ; biny++){
+			outfile << h2_tdc_tdiff_adc[254]->GetXaxis()->GetBinCenter(binx) << " " 
+				<< h2_tdc_tdiff_adc[254]->GetYaxis()->GetBinCenter(biny) << " "
+				<< h2_tdc_tdiff_adc[254]->GetBinContent(binx,biny) 	 << " " 
+				<< h2_tdc_tdiff_amp[254]->GetBinContent(binx,biny)	 << "\n";
+		}
+	}
+	outfile.close();
+
+	outfile.open("th1d_lroffset.txt");
+	TH1D * proj = h2_tdc_tdiff_adc[254]->ProjectionX("proj");	
+	for( int binx = 1; binx < proj->GetXaxis()->GetNbins() ; binx++){
+			outfile << proj->GetXaxis()->GetBinCenter(binx) << " " 
+				<< proj->GetBinContent(binx)	 << "\n";
+	}
+	outfile.close();
+	
+	
+
 	
 	return 0;
 }

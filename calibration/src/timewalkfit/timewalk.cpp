@@ -58,7 +58,6 @@ int main(int argc, char** argv) {
 	//BAND->LoadLROffsets();
 	//BAND->LoadVelocityMap();
 	//cout << "\n\tLoaded BAND calibrations\n\n";
-
 	// Define histograms to be filled:
 	const int nHistos = 600;
 	double parA_L[nHistos][2] = {{0}};
@@ -292,21 +291,45 @@ int main(int argc, char** argv) {
 		for(int il = 1 ; il <= 6 ; il++){
 			for(int ic = 1 ; ic <= slc[il-1][is-1] ; ic++){
 				int idx = 100*is + 10*il + ic;
+
+				tabL_amp << 	is << "\t" << il << "\t" << ic << "\t" <<
+						par1_L[idx][1] << "\t" << par2_L[idx][1] << "\t" << par3_L[idx][1] << "\t" <<
+						0 << "\t" << 0 << "\t" << 0 << "\n";
+				tabR_amp << 	is << "\t" << il << "\t" << ic << "\t" <<
+						par1_R[idx][1] << "\t" << par2_R[idx][1] << "\t" << par3_R[idx][1] << "\t" <<
+						0 << "\t" << 0 << "\t" << 0 << "\n";
+
+					
+
+
 				tabL_adc << is << "\t" << il << "\t" << ic << "\t" 
 					<< par2_L[idx][0] << "\t" << par1_L[idx][0] << "\t" << par3_L[idx][0] << "\t"
 					<< par2e_L[idx][0]  << "\t" << par1e_L[idx][0] << "\t" << par3e_L[idx][0] << "\n";
-				tabL_amp << is << "\t" << il << "\t" << ic << "\t" 
-					<< par2_L[idx][1] 	<< "\t" << par1_L[idx][1] 	<< "\t" << par3_L[idx][1] << "\t"
-					<< par2e_L[idx][1]  	<< "\t" << par1e_L[idx][1] 	<< "\t" << par3e_L[idx][1] << "\n";
+				//tabL_amp << is << "\t" << il << "\t" << ic << "\t" 
+				//	<< par2_L[idx][1] 	<< "\t" << par1_L[idx][1] 	<< "\t" << par3_L[idx][1] << "\t"
+				//	<< par2e_L[idx][1]  	<< "\t" << par1e_L[idx][1] 	<< "\t" << par3e_L[idx][1] << "\n";
 				tabR_adc << is << "\t" << il << "\t" << ic << "\t" 
 					<< par2_R[idx][0] << "\t" << par1_R[idx][0] << "\t" << par3_R[idx][0] << "\t"
 					<< par2e_R[idx][0]  << "\t" << par1e_R[idx][0] << "\t" << par3e_R[idx][0] << "\n";
-				tabR_amp << is << "\t" << il << "\t" << ic << "\t" 
-					<< par2_R[idx][1] 	<< "\t" << par1_R[idx][1] 	<< "\t" << par3_L[idx][1] << "\t"
-					<< par2e_R[idx][1]  	<< "\t" << par1e_R[idx][1] 	<< "\t" << par3e_L[idx][1] << "\n";
+				//tabR_amp << is << "\t" << il << "\t" << ic << "\t" 
+				//	<< par2_R[idx][1] 	<< "\t" << par1_R[idx][1] 	<< "\t" << par3_L[idx][1] << "\t"
+				//	<< par2e_R[idx][1]  	<< "\t" << par1e_R[idx][1] 	<< "\t" << par3e_L[idx][1] << "\n";
 			}
 		}
 	}
+	
+	ofstream th2d ;
+	th2d.open("th2d_outfile.txt");
+	for( int binx = 1; binx < h2_tdc_amp_L[354]->GetXaxis()->GetNbins() ; binx++ ){
+		for( int biny = 1; biny < h2_tdc_amp_L[354]->GetYaxis()->GetNbins() ; biny++ ){
+			th2d << h2_tdc_amp_L[354]->GetXaxis()->GetBinCenter(binx) << " " << 
+				h2_tdc_amp_L[354]->GetYaxis()->GetBinCenter(biny) << " " << 
+				h2_tdc_amp_L[354]->GetBinContent(binx,biny) << "\n";
+		}	
+	}
+	th2d.close();
+
+
 	tabL_adc.close();
 	tabR_adc.close();
 	tabL_amp.close();

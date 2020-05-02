@@ -176,7 +176,7 @@ void calibclass::CreateBars(){
 			thisPMT.adc == 0 || matePMT.adc == 0 ||thisPMT.amp == 0 || matePMT.amp == 0 || 
 			thisPMT.amp >= 4095 || matePMT.amp >= 4095 || 
 			thisPMT.tdc == 1e10 || matePMT.tdc == 1e10 || thisPMT.ftdc == 1e10 || matePMT.ftdc == 1e10 || 
-			thisPMT.adc < 4000 || matePMT.adc < 4000 ) continue;
+			thisPMT.adc < 1000 || matePMT.adc < 1000 ) continue;
 
 		// Apply correction to tdiff:
 		thisPMT.tdc = thisPMT.tdc 	- (sign)*TDC_TDIFF[barKey];
