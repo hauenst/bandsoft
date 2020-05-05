@@ -11,3 +11,9 @@ add_executable(fiducials fiducials.cpp )
 target_link_libraries(fiducials ${ROOT_LIBRARIES} Hipo4 Banks4  -lmysqlclient -lpthread -lz -lm -ldl -lssl -lcrypto )
 install( TARGETS fiducials
 		DESTINATION ${CMAKE_SOURCE_DIR}/analysis/bin )
+
+
+add_executable(draw_fiducials draw_fiducials.cpp )
+target_link_libraries(draw_fiducials ${ROOT_LIBRARIES} Hipo4 Banks4  -lmysqlclient -lpthread -lz -lm -ldl -lssl -lcrypto )
+install( TARGETS draw_fiducials
+		DESTINATION ${CMAKE_SOURCE_DIR}/analysis/bin )
