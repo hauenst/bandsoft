@@ -193,9 +193,9 @@ int main(int argc, char** argv) {
 			Q2		= 0;
 			xB		= 0;
 			W2		= 0;
-			p_p		= 0;
-			theta_p		= 0;
-			phi_p		= 0;
+			p_n		= 0;
+			theta_n		= 0;
+			phi_n		= 0;
 			p_miss		= 0;
 			m_miss		= 0;
 			theta_miss	= 0;
@@ -313,27 +313,59 @@ int main(int argc, char** argv) {
 			if (!nPass) continue;
 			Edep = meanADC.at(0);
 
+			TVector3 neutron_direction = hitpos.at(0);
+			double neutron_tof = meanTimeFADC.at(0) - starttime - FADC_GLOB_SHIFT[barkey.at(0)];
+			double pathlength = neutron_direction.Mag();
+			//TOF = x*sqrt(m2*c2+p2)/pc
+			//p = m*x/sqrt(c2*tof2-x2) 
+			//m in GeV, tof in ns, x in cm --> c in cm/ns = 29.979245800
+			double mN = 0.93957; //GeV
+			couble c_cm_ns = 29.9792458; 
+			double neutron_mom = mN*pathlength / (sqrt(c_cm_ns*c_cm_ns*neutron_tof*neutron_tof - pathlength*pathlength));
+
+			cout << "ToF is " << neutron_tof << " , with momentum " << neutron_mom << endl;
+			TVector3 nMomentum = neutron_direction * neutron_mom; 
+
+			cout << "Check if neutron vector mom is assigned correctly: vec mag " << nMomentum.Mag() << " ,  calc neutron mom = " << neutron_mom << endl;
+			
+			p_n 		= nMomentum.Mag();
+			theta_n         = nMomentum.Theta();
+                        phi_n         = nMomentum.Phi();
+                        double E_n    = sqrt(p_n*p_n + mN*mN);
+                        ////    assuming d e -> e' p . Missing particle is neutron
+                        TVector3 missMomentum; missMomentum = nMomentum;
+                        p_miss                = missMomentum.Mag();
+                        m_miss                = mN - mD + sqrt( pow(nu+mD-E_n,2) + pow(p_miss,2) );
+                        //theta_miss    = missMomentum.Theta();
+                        //phi_miss      = missMomentum.Phi();
+                        //// Histograms to see quality of PID cuts made
+                        //h1_mult_p     -> Fill( pMult );
+                        //h1_vdelX_pe   -> Fill( pVertex.X() - eVertex.X() );
+                        //h1_vdelY_pe   -> Fill( pVertex.Y() - eVertex.Y() );
+                        //h2_vdelZ_pe   -> Fill( phi_e*180./M_PI , pVertex.Z() - eVertex.Z() );
+                        //h2_BvP_p      -> Fill( pMomentum.Mag() , pBeta );
+                        //h1_chi2pid_p  -> Fill( pChi2pid );
 
 			// put more neutron stuff here 
 
-			// Histograms to compare with simulation for counting (e,e'p):
-			//h1_sim_p_e	-> Fill( p_e );
-			//h1_sim_th_e	-> Fill( theta_e*180./M_PI );
-			//h2_sim_th_ph_e	-> Fill( phi_e*180./M_PI , theta_e*180./M_PI );
-			//h1_sim_xB_e	-> Fill( xB );
-			//h1_sim_Q2_e	-> Fill( Q2 );
-			//h1_sim_W_e	-> Fill( sqrt(W2) );
+			// THis are not simulation Histograms to compare with simulation for counting (e,e'p):
+			h1_sim_p_e	-> Fill( p_e );
+			h1_sim_th_e	-> Fill( theta_e*180./M_PI );
+			h2_sim_th_ph_e	-> Fill( phi_e*180./M_PI , theta_e*180./M_PI );
+			h1_sim_xB_e	-> Fill( xB );
+			h1_sim_Q2_e	-> Fill( Q2 );
+			h1_sim_W_e	-> Fill( sqrt(W2) );
 			//
-			//h1_sim_p_p	-> Fill( p_p );
-			//h1_sim_th_p	-> Fill( theta_p );
-			//h2_sim_th_ph_p	-> Fill( phi_p*180./M_PI , theta_p*180./M_PI );
-			//h2_sim_th_th_pe	-> Fill( theta_e*180./M_PI , theta_p*180./M_PI );
-			//h2_sim_p_p_pe	-> Fill( p_e , p_p );
-			//h2_sim_ph_ph_pe	-> Fill( phi_e*180./M_PI , phi_p*180./M_PI );
-			//h1_sim_mass_m	-> Fill( m_miss );
-			//h1_sim_p_m	-> Fill( p_miss );
-			//h1_sim_px_m	-> Fill( p_miss*sin(theta_miss)*cos(phi_miss) );
-			//h1_sim_py_m	-> Fill( p_miss*sin(theta_miss)*sin(phi_miss) );
+			h1_sim_p_p	-> Fill( p_n );
+			h1_sim_th_p	-> Fill( theta_n );
+			h2_sim_th_ph_p	-> Fill( phi_n*180./M_PI , theta_n*180./M_PI );
+			h2_sim_th_th_pe	-> Fill( theta_e*180./M_PI , theta_n*180./M_PI );
+			h2_sim_p_p_pe	-> Fill( p_e , p_n );
+			h2_sim_ph_ph_pe	-> Fill( phi_e*180./M_PI , phi_p*180./M_PI );
+			h1_sim_mass_m	-> Fill( m_miss );
+			h1_sim_p_m	-> Fill( p_miss );
+			h1_sim_px_m	-> Fill( p_miss*sin(theta_miss)*cos(phi_miss) );
+			h1_sim_py_m	-> Fill( p_miss*sin(theta_miss)*sin(phi_miss) );
 
 			// Fill tree to do any more plots on the fly
 			outTree->Fill();
