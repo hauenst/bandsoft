@@ -39,11 +39,17 @@ void getProtonInfo( BParticle particles, double pid[maxProtons], TVector3 moment
 			double time[maxProtons], double charge[maxProtons], double beta[maxProtons], double chi2pid[maxProtons], double status[maxProtons] , int& multiplicity );
 bool checkProton( int pid, TVector3 momentum, TVector3 del_vertex, double time, int charge, double beta, double chi2pid, int status, int mult );
 void getNeutronInfo( BBand band_hits, int& mult, int id[maxNeutrons], double edep[maxNeutrons],
-			double time[maxNeutrons], TVector3 path[maxNeutrons] , double starttime );
+			double time[maxNeutrons], TVector3 path[maxNeutrons] , double starttime , int thisRun);
 bool pointsToBand(double theta,double phi,double z_m);
-void LoadGlobalShift(double* FADC_GLOB_SHIFT);
 
-double FADC_GLOB_SHIFT[600];
+void LoadGlobalShift();
+void LoadRunByRunShift();
+
+double FADC_GLOBSHIFT[600] = {0.};
+double FADC_RUNBYRUNSHIFT[10000] = {0.};
+
+double TDC_GLOBSHIFT[600] = {0.};
+double TDC_RUNBYRUNSHIFT[10000] = {0.};
 
 int main(int argc, char** argv) {
 	// check number of arguments
@@ -140,7 +146,8 @@ int main(int argc, char** argv) {
 	rcdb::Connection connection("mysql://rcdb@clasdb.jlab.org/rcdb");
 
 	// Load FADC offsets
-	LoadGlobalShift(FADC_GLOB_SHIFT);
+	LoadGlobalShift();
+	LoadRunByRunShift();
 
 	// Load input file
 	for( int i = 2 ; i < argc ; i++ ){
@@ -266,7 +273,7 @@ int main(int argc, char** argv) {
 			
 			// Grab the neutron information:
 			TVector3 nMomentum[maxNeutrons], nPath[maxNeutrons];
-			getNeutronInfo( band_hits, nMult, barID, nEdep, nTime, nPath , starttime );
+			getNeutronInfo( band_hits, nMult, barID, nEdep, nTime, nPath , starttime , runNum);
 			for( int n = 0 ; n < nMult ; n++ ){
 				dL_n[n]		= nPath[n].Mag();
 				theta_n[n]	= nPath[n].Theta();
@@ -290,7 +297,7 @@ int main(int argc, char** argv) {
 
 
 void getNeutronInfo( BBand band_hits, int& mult, int id[maxNeutrons], double edep[maxNeutrons],
-			double time[maxNeutrons], TVector3 path[maxNeutrons] , double starttime ){
+			double time[maxNeutrons], TVector3 path[maxNeutrons] , double starttime , int thisRun){
 	
 	if( band_hits.getRows() > maxNeutrons ) return; // not interested in events with more than 1 BAND hit for now
 	for( int hit = 0 ; hit < band_hits.getRows() ; hit++ ){
@@ -298,7 +305,8 @@ void getNeutronInfo( BBand band_hits, int& mult, int id[maxNeutrons], double ede
 
 		id[hit]		= band_hits.getBarKey(hit);
 		edep[hit]	= sqrt( band_hits.getAdcLcorr(hit) * band_hits.getAdcRcorr(hit) );
-		time[hit]	= band_hits.getMeantimeFadc(hit) - FADC_GLOB_SHIFT[id[hit]] - starttime;
+		double tof_fix = (band_hits.getMeantimeTdc(hit) - starttime ) - TDC_GLOBSHIFT[band_hits.getBarKey(hit)] - TDC_RUNBYRUNSHIFT[thisRun];
+		time[hit]	= tof_fix;
 		path[hit].SetXYZ(	band_hits.getX(hit), band_hits.getY(hit), band_hits.getZ(hit) 	);
 
 		mult++;
@@ -307,9 +315,9 @@ void getNeutronInfo( BBand band_hits, int& mult, int id[maxNeutrons], double ede
 }
 
 int getRunNumber( string filename ){
-	//string parsed = filename.substr( filename.find("inc") );
+	string parsed = filename.substr( filename.find("inc") );
 	//string parsed = filename.substr( filename.find("_clas") );
-	string parsed = filename.substr( filename.find("_band") );
+	//string parsed = filename.substr( filename.find("_band") );
 	string moreparse = parsed.substr(6,8);
 	cout << filename << " " << parsed << "\n";
 	cout << moreparse << " " << stoi(moreparse) << "\n\n";
@@ -395,37 +403,6 @@ bool checkProton( int pid, TVector3 momentum, TVector3 del_vertex, double time, 
 	return true;
 }
 
-
-void LoadGlobalShift(double* FADC_GLOB_SHIFT){
-
-	ifstream f;
-	int sector, layer, component, barId;
-	double pol0, height, mean, sig, temp;
-
-	f.open("../include/global_offset_fadc.txt");
-
-	while(!f.eof()){
-
-		f >> sector;
-		f >> layer;
-		f >> component;
-		barId = 100*sector + 10*layer + component;
-		f >> pol0;
-		f >> height;
-		f >> mean;
-		FADC_GLOB_SHIFT[barId] = mean;
-		f >> sig;
-		f >> temp;
-		f >> temp;
-
-	}
-
-	f.close();
-
-}
-
-
-
 bool pointsToBand(double theta,double phi,double z_m){
 	//double z = z_m*100; // from m to cm
 	double z = z_m;
@@ -468,4 +445,71 @@ bool pointsToBand(double theta,double phi,double z_m){
 		return 1;
 
 	return 0;
+}
+
+void LoadGlobalShift(){
+	ifstream f;
+	int sector, layer, component, barId;
+	double pol0, height, mean, sig, temp;
+
+	f.open("../include/global_offset_fadc-10082019.txt");
+	while(!f.eof()){
+		f >> sector;
+		f >> layer;
+		f >> component;
+		barId = 100*sector + 10*layer + component;
+		f >> pol0;
+		f >> height;
+		f >> mean;
+		f >> sig;
+		FADC_GLOBSHIFT[barId] = mean;
+		f >> temp;
+		f >> temp;
+	}
+	f.close();
+	f.open("../include/global_offset_tdc_1stIter-04132020.txt");
+	while(!f.eof()){
+		f >> sector;
+		f >> layer;
+		f >> component;
+		barId = 100*sector + 10*layer + component;
+		f >> pol0;
+		f >> height;
+		f >> mean;
+		f >> sig;
+		TDC_GLOBSHIFT[barId] = mean;
+		f >> temp;
+		f >> temp;
+	}
+	f.close();
+}
+void LoadRunByRunShift(){
+	ifstream f;
+	int runnum;
+	double pol0, height, mean, sig, temp;
+
+	f.open("../include/runByrun_offset_fadc-10082019.txt");
+	while(!f.eof()){
+		f >> runnum;
+		f >> pol0;
+		f >> height;
+		f >> mean;
+		f >> sig;
+		FADC_RUNBYRUNSHIFT[runnum] = mean;
+		f >> temp;
+		f >> temp;
+	}
+	f.close();
+	f.open("../include/runByrun_offset_tdc_firstIter-04132020.txt");
+	while(!f.eof()){
+		f >> runnum;
+		f >> pol0;
+		f >> height;
+		f >> mean;
+		f >> sig;
+		TDC_RUNBYRUNSHIFT[runnum] = mean;
+		f >> temp;
+		f >> temp;
+	}
+	f.close();
 }
