@@ -1,0 +1,4 @@
+analysis/bin/*
+simulation/bin/*
+tools/bin/*
+calibration/bin/*

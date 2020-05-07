@@ -35,7 +35,7 @@ class BBand : public hipo::bank {
 		//only new BAND::hits structure
 		int energy_order       ;
 		int indexLpmt_order    ;
-		int indexLpmt_order    ;
+		int indexRpmt_order    ;
 		int status_order       ;
 		//only old BAND::hits structure
 		int adcLcorr_order     ;
@@ -64,24 +64,26 @@ class BBand : public hipo::bank {
 		float getMeantimeFadc (int index) { return getFloat (meantimeFadc_order ,index);}
 		float getDifftimeTdc  (int index) { return getFloat (difftimeTdc_order  ,index);}
 		float getDifftimeFadc (int index) { return getFloat (difftimeFadc_order ,index);}
-		float getAdcLcorr     (int index) { return getFloat (adcLcorr_order     ,index);}
-		float getAdcRcorr     (int index) { return getFloat (adcRcorr_order     ,index);}
-		float getTfadcLcorr   (int index) { return getFloat (tFadcLcorr_order   ,index);}
-		float getTfadcRcorr   (int index) { return getFloat (tFadcRcorr_order   ,index);}
-		float getTtdcLcorr    (int index) { return getFloat (tTdcLcorr_order    ,index);}
-		float getTtdcRcorr    (int index) { return getFloat (tTdcRcorr_order    ,index);}
 		float getX            (int index) { return getFloat (x_order            ,index);}
 		float getY            (int index) { return getFloat (y_order            ,index);}
 		float getZ            (int index) { return getFloat (z_order            ,index);}
 		float getUx           (int index) { return getFloat (ux_order           ,index);}
 		float getUy           (int index) { return getFloat (uy_order           ,index);}
 		float getUz           (int index) { return getFloat (uz_order           ,index);}
+		//next 6 functions are exclusively for old BAND::hits structure
+		float getAdcLcorr     (int index) { return getFloat (adcLcorr_order     ,index);}
+		float getAdcRcorr     (int index) { return getFloat (adcRcorr_order     ,index);}
+		float getTfadcLcorr   (int index) { return getFloat (tFadcLcorr_order   ,index);}
+		float getTfadcRcorr   (int index) { return getFloat (tFadcRcorr_order   ,index);}
+		float getTtdcLcorr    (int index) { return getFloat (tTdcLcorr_order    ,index);}
+		float getTtdcRcorr    (int index) { return getFloat (tTdcRcorr_order    ,index);}
 		//next functions are for BAND::hits new structure. some of them are mapped to the same class members than previous get-functions
 		float getEx           (int index) { return getFloat (ux_order           ,index);}
 		float getEy           (int index) { return getFloat (uy_order           ,index);}
 		float getEz           (int index) { return getFloat (uz_order           ,index);}
 		float getTime         (int index) { return getFloat (meantimeTdc_order  ,index);}
 		float getTimeFadc     (int index) { return getFloat (meantimeFadc_order ,index);}
+		//exclusively for new BAND::hits structure
 		float getEnergy       (int index) { return getFloat (energy_order       ,index);}
 		int   getLpmtindex    (int index) { return getInt   (indexLpmt_order    ,index);}
 		int   getRpmtindex    (int index) { return getInt   (indexRpmt_order    ,index);}

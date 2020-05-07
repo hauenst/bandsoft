@@ -5,7 +5,7 @@
 BBand::BBand(hipo::schema __schema, int __old) : hipo::bank(__schema){
 
   bool oldfile = true;
-
+  std::cout << "BBand constructor using old Band::hits structure files " << std::endl;
 	id_order           = __schema.getEntryOrder("id"          );
 	sector_order       = __schema.getEntryOrder("sector"      );
 	layer_order        = __schema.getEntryOrder("layer"       );
@@ -36,7 +36,7 @@ BBand::BBand(hipo::schema __schema, int __old) : hipo::bank(__schema){
 BBand::BBand(hipo::schema __schema) : hipo::bank(__schema){
 
   bool oldfile = false;
-
+  std::cout << "BBand constructor using new Band::hits structure files " << std::endl;
 	id_order           = __schema.getEntryOrder("id"          );
 	sector_order       = __schema.getEntryOrder("sector"      );
 	layer_order        = __schema.getEntryOrder("layer"       );
