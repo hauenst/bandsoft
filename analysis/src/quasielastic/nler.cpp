@@ -32,7 +32,7 @@ double getBeamEnergy( int runNum );
 
 void getEventInfo( BEvent eventInfo, double &integrated_charge, double &livetime, double &starttime );
 
-void getElectronInfo( BParticle particles, int& pid, TVector3& momentum, TVector3& vertex, 
+void getElectronInfo( BParticle particles, int& pid, TVector3& momentum, TVector3& vertex,
 			double& time, int& charge, double& beta, double& chi2pid, int& status );
 
 bool checkElectron( int pid, TVector3 momentum, TVector3 vertex, double time, int charge, double beta, double chi2pid, int status,
@@ -43,7 +43,7 @@ void getProtonInfo( BParticle particles, int& pid, TVector3& momentum, TVector3&
 
 bool checkProton( int pid, TVector3 momentum, TVector3 del_vertex, double time, int charge, double beta, double chi2pid, int status, int mult );
 
-void getNeutronInfo(BBand band_hits, int& nHits, vector<int>& barKey, vector<int>& layer, vector<double>& meanADC, 
+void getNeutronInfo(BBand band_hits, int& nHits, vector<int>& barKey, vector<int>& layer, vector<double>& meanADC,
 			vector<double>& meanTimeFADC, vector<TVector3>& hitPos);
 
 bool checkNeutron(int nHits, vector<int> barKey, vector<int> layer, vector<double> meanADC, vector<double> meanTimeFADC, vector<TVector3> hitPos, double starttime, double* FADC_GLOB_SHIFT, double &ToF ) ;
@@ -76,13 +76,13 @@ int main(int argc, char** argv) {
 	double Q2		= 0;
 	double xB		= 0;
 	double W2		= 0;
-	double p_p		= 0;
-	double theta_p		= 0;
-	double phi_p		= 0;
+	double p_n		= 0;
+	double theta_n		= 0;
+	double phi_n		= 0;
 	double p_miss		= 0;
 	double m_miss		= 0;
 	double theta_miss	= 0;
-        double phi_miss		= 0;
+  double phi_miss		= 0;
 	double ToF		= 0;
 	double Edep		= 0;
 	outTree->Branch("gated_charge"	,&gated_charge		);
@@ -101,9 +101,9 @@ int main(int argc, char** argv) {
 	outTree->Branch("Q2"		,&Q2			);
 	outTree->Branch("xB"		,&xB			);
 	outTree->Branch("W2"		,&W2			);
-	outTree->Branch("p_p"		,&p_p			);
-	outTree->Branch("theta_p"	,&theta_p		);
-	outTree->Branch("phi_p"		,&phi_p			);
+	outTree->Branch("p_p"		,&p_n			);
+	outTree->Branch("theta_p"	,&theta_n		);
+	outTree->Branch("phi_p"		,&phi_n			);
 	outTree->Branch("p_miss"	,&p_miss		);
 	outTree->Branch("m_miss"	,&m_miss		);
 	outTree->Branch("theta_miss"	,&theta_miss		);
@@ -161,9 +161,9 @@ int main(int argc, char** argv) {
 		TString inputFile = argv[i];
 		hipo::reader reader;
 		reader.open(inputFile);
-		hipo::dictionary  factory;      
+		hipo::dictionary  factory;
 		hipo::schema	  schema;
-		reader.readDictionary(factory); 
+		reader.readDictionary(factory);
 		BEvent		event_info		(factory.getSchema("REC::Event"		));
 		BParticle	particles		(factory.getSchema("REC::Particle"	));
 		BCalorimeter	calorimeter		(factory.getSchema("REC::Calorimeter"	));
@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
 		hipo::bank	band_tdcs		(factory.getSchema("BAND::tdc"		));
 		hipo::bank	scaler			(factory.getSchema("RUN::scaler"	));
 		hipo::event 	readevent;
-		
+
 		// Loop over all events in file
 		int event_counter = 0;
 		gated_charge = 0;
@@ -216,7 +216,7 @@ int main(int argc, char** argv) {
 			readevent.getStructure(scintillator);
 			readevent.getStructure(band_hits);
 			readevent.getStructure(scaler);
-	
+
 			// Currently, REC::Event has uncalibrated livetime / charge, so these will have to work
 			double livetime 	= 	scaler.getFloat(2,0);
 			gated_charge 		= 	scaler.getFloat(0,0) * 0.001; // [microC] -- this seems to be ~10-20% accurate
@@ -266,14 +266,14 @@ int main(int argc, char** argv) {
 			h2_EoP_lU	-> Fill( lU ,  E_tot / p_e 	);
 			h2_EoP_lV	-> Fill( lV ,  E_tot / p_e 	);
 			h2_EoP_lW	-> Fill( lW ,  E_tot / p_e 	);
-			
-			
+
+
 			// Grab the proton information:
 			//TVector3 pVertex, pMomentum;
 			//int pPid = 0, pCharge = 0, pStatus = 0, pMult = 0;
 			//double pTime = 0, pBeta = 0, pChi2pid = 0;
 			//getProtonInfo( particles, pPid, pMomentum, pVertex, pTime ,pCharge, pBeta, pChi2pid, pStatus, pMult );
-			////	do proton PID cuts		
+			////	do proton PID cuts
 			//bool pPass = checkProton( pPid, pMomentum, pVertex-eVertex, pTime ,pCharge, pBeta, pChi2pid, pStatus , pMult );
 			//if( !pPass ) continue;
 			//// Create more kinematic variables
@@ -281,7 +281,7 @@ int main(int argc, char** argv) {
 			//theta_p		= pMomentum.Theta();
 			//phi_p		= pMomentum.Phi();
 			//double E_p	= sqrt(p_p*p_p + mP*mP);
-			//// 	assuming d e -> e' p 
+			//// 	assuming d e -> e' p
 			//TVector3 missMomentum; missMomentum = pMomentum - qMomentum;
 			//p_miss		= missMomentum.Mag();
 			//m_miss		= mP - mD + sqrt( pow(nu+mD-E_p,2) + pow(p_miss,2) );
@@ -297,7 +297,7 @@ int main(int argc, char** argv) {
 
 			//// Make a physics cut for QE events:
 			//if( sqrt(W2) < 0.6 || sqrt(W2) > 1.05 ) continue;
-			
+
 			// Get the neutron information
 			int nHits;
 			vector<int> barKey;
@@ -305,37 +305,37 @@ int main(int argc, char** argv) {
 			vector<double> meanADC;
 			vector<double> meanTimeFADC;
 			vector<TVector3> hitPos;
-				
+
 			getNeutronInfo(band_hits, nHits, barKey, layer, meanADC, meanTimeFADC, hitPos);
-			
+
 			bool nPass = checkNeutron(nHits, barKey, layer, meanADC, meanTimeFADC, hitPos, starttime, FADC_GLOB_SHIFT, ToF);
 			//cout << nHits << "\t" << nPass << endl;
 			if (!nPass) continue;
 			Edep = meanADC.at(0);
 
-			TVector3 neutron_direction = hitpos.at(0);
-			double neutron_tof = meanTimeFADC.at(0) - starttime - FADC_GLOB_SHIFT[barkey.at(0)];
+			TVector3 neutron_direction = hitPos.at(0);
+			double neutron_tof = meanTimeFADC.at(0) - starttime - FADC_GLOB_SHIFT[barKey.at(0)];
 			double pathlength = neutron_direction.Mag();
 			//TOF = x*sqrt(m2*c2+p2)/pc
-			//p = m*x/sqrt(c2*tof2-x2) 
+			//p = m*x/sqrt(c2*tof2-x2)
 			//m in GeV, tof in ns, x in cm --> c in cm/ns = 29.979245800
 			double mN = 0.93957; //GeV
-			couble c_cm_ns = 29.9792458; 
+			double c_cm_ns = 29.9792458;
 			double neutron_mom = mN*pathlength / (sqrt(c_cm_ns*c_cm_ns*neutron_tof*neutron_tof - pathlength*pathlength));
 
 			cout << "ToF is " << neutron_tof << " , with momentum " << neutron_mom << endl;
-			TVector3 nMomentum = neutron_direction * neutron_mom; 
+			TVector3 nMomentum = neutron_direction * neutron_mom;
 
 			cout << "Check if neutron vector mom is assigned correctly: vec mag " << nMomentum.Mag() << " ,  calc neutron mom = " << neutron_mom << endl;
-			
+
 			p_n 		= nMomentum.Mag();
 			theta_n         = nMomentum.Theta();
-                        phi_n         = nMomentum.Phi();
-                        double E_n    = sqrt(p_n*p_n + mN*mN);
+			phi_n         = nMomentum.Phi();
+			double E_n    = sqrt(p_n*p_n + mN*mN);
                         ////    assuming d e -> e' p . Missing particle is neutron
-                        TVector3 missMomentum; missMomentum = nMomentum;
-                        p_miss                = missMomentum.Mag();
-                        m_miss                = mN - mD + sqrt( pow(nu+mD-E_n,2) + pow(p_miss,2) );
+			TVector3 missMomentum; missMomentum = nMomentum;
+			p_miss                = missMomentum.Mag();
+			m_miss                = mN - mD + sqrt( pow(nu+mD-E_n,2) + pow(p_miss,2) );
                         //theta_miss    = missMomentum.Theta();
                         //phi_miss      = missMomentum.Phi();
                         //// Histograms to see quality of PID cuts made
@@ -346,7 +346,7 @@ int main(int argc, char** argv) {
                         //h2_BvP_p      -> Fill( pMomentum.Mag() , pBeta );
                         //h1_chi2pid_p  -> Fill( pChi2pid );
 
-			// put more neutron stuff here 
+			// put more neutron stuff here
 
 			// THis are not simulation Histograms to compare with simulation for counting (e,e'p):
 			h1_sim_p_e	-> Fill( p_e );
@@ -361,7 +361,7 @@ int main(int argc, char** argv) {
 			h2_sim_th_ph_p	-> Fill( phi_n*180./M_PI , theta_n*180./M_PI );
 			h2_sim_th_th_pe	-> Fill( theta_e*180./M_PI , theta_n*180./M_PI );
 			h2_sim_p_p_pe	-> Fill( p_e , p_n );
-			h2_sim_ph_ph_pe	-> Fill( phi_e*180./M_PI , phi_p*180./M_PI );
+			h2_sim_ph_ph_pe	-> Fill( phi_e*180./M_PI , phi_n*180./M_PI );
 			h1_sim_mass_m	-> Fill( m_miss );
 			h1_sim_p_m	-> Fill( p_miss );
 			h1_sim_px_m	-> Fill( p_miss*sin(theta_miss)*cos(phi_miss) );
@@ -374,7 +374,7 @@ int main(int argc, char** argv) {
 		cout << "Total charge collected in file: " << gated_charge << " [microC]\n";
 		cout << "Total number of events (e,e'pn): " << outTree->GetEntries() << "\n";
 	}// end loop over files
-	
+
 
 	outFile->cd();
 	h2_EoP_pe	->Write();
@@ -394,21 +394,21 @@ int main(int argc, char** argv) {
 	h2_BvP_p	->Write();
 	h1_chi2pid_p	->Write();
 	h1_sim_p_e	->Write();
-	h1_sim_th_e	->Write(); 
-	h2_sim_th_ph_e	->Write(); 
-	h1_sim_xB_e	->Write(); 
-	h1_sim_Q2_e	->Write(); 
-	h1_sim_W_e	->Write(); 
-	h1_sim_p_p	->Write(); 
-	h1_sim_th_p	->Write(); 
-	h2_sim_th_ph_p	->Write(); 
-	h2_sim_th_th_pe	->Write(); 
-	h2_sim_p_p_pe	->Write(); 
-	h2_sim_ph_ph_pe	->Write(); 
-	h1_sim_mass_m	->Write(); 
-	h1_sim_p_m	->Write(); 
-	h1_sim_px_m	->Write(); 
-	h1_sim_py_m	->Write(); 
+	h1_sim_th_e	->Write();
+	h2_sim_th_ph_e	->Write();
+	h1_sim_xB_e	->Write();
+	h1_sim_Q2_e	->Write();
+	h1_sim_W_e	->Write();
+	h1_sim_p_p	->Write();
+	h1_sim_th_p	->Write();
+	h2_sim_th_ph_p	->Write();
+	h2_sim_th_th_pe	->Write();
+	h2_sim_p_p_pe	->Write();
+	h2_sim_ph_ph_pe	->Write();
+	h1_sim_mass_m	->Write();
+	h1_sim_p_m	->Write();
+	h1_sim_px_m	->Write();
+	h1_sim_py_m	->Write();
 	outTree->Write();
 	outFile->Close();
 
@@ -430,15 +430,15 @@ double getBeamEnergy( int runNum ){
         if( runNum <= 6399 ) thisEn = 10.6;
         else{ thisEn = 10.2; }
         if( runNum == 6523 || runNum == 6524 || runNum == 6525 ) thisEn = 10.;
-	
+
 
         return thisEn;
 }
 
 void getEventInfo( BEvent eventInfo, double &integrated_charge, double &livetime, double &starttime ){
-	if( eventInfo.getRows() != 1 ){ 
-		cerr << "getEventInfo::NotImplementedFunction\n"; 
-		exit(-1); 
+	if( eventInfo.getRows() != 1 ){
+		cerr << "getEventInfo::NotImplementedFunction\n";
+		exit(-1);
 	}
 	//integrated_charge       += (double)eventInfo.getBCG(0); 	// not calibrated currently
 	//livetime 		= (double)eventInfo.getLT(0);		// not calibrated currently
@@ -483,7 +483,7 @@ void getNeutronInfo(BBand band_hits, int& nHits, vector<int>& barKey, vector<int
 	nHits = band_hits.getRows();
 
 	for (int hit = 0; hit < nHits; hit++) {
-	
+
 		barKey.push_back(band_hits.getBarKey(hit));
 		layer.push_back(band_hits.getLayer(hit));
 		double ADCL = band_hits.getAdcLcorr(hit);
@@ -494,10 +494,10 @@ void getNeutronInfo(BBand band_hits, int& nHits, vector<int>& barKey, vector<int
 		double hitx = band_hits.getX(hit);
 		double hity = band_hits.getY(hit);
 		double hitz = band_hits.getZ(hit);
-		hitPos.push_back(TVector3(hitx, hity, hitz));	
-		
+		hitPos.push_back(TVector3(hitx, hity, hitz));
+
 	}
-	
+
 }
 
 bool checkElectron( int pid, TVector3 momentum, TVector3 vertex, double time, int charge, double beta, double chi2pid, int status,
@@ -528,8 +528,8 @@ bool checkProton( int pid, TVector3 momentum, TVector3 del_vertex, double time, 
 	if( mult != 1 ) return false;
 	if( del_vertex.Z() < -5 || del_vertex.Z() > 5 ) return false;
 	if( chi2pid < -3 || chi2pid > 3 ) return false;
-	
-	
+
+
 	return true;
 }
 
@@ -545,7 +545,7 @@ bool checkNeutron(int nHits, vector<int> barKey, vector<int> layer, vector<doubl
 
 		// cut on time of flight
 		ToF = meanTimeFADC[hit] - starttime - FADC_GLOB_SHIFT[barKey[hit]];
-		//if (ToF < 20 || ToF > 50) return false;	
+		//if (ToF < 20 || ToF > 50) return false;
 
 		// cut on min E_dep
 		// currently assuming 2000 ch/MeV
@@ -584,6 +584,3 @@ void LoadGlobalShift(double* FADC_GLOB_SHIFT){
 	f.close();
 
 }
-
-
-
