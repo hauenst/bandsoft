@@ -71,12 +71,48 @@ class BBand : public hipo::bank {
 		float getUy           (int index) { return getFloat (uy_order           ,index);}
 		float getUz           (int index) { return getFloat (uz_order           ,index);}
 		//next 6 functions are exclusively for old BAND::hits structure
-		float getAdcLcorr     (int index) { return getFloat (adcLcorr_order     ,index);}
-		float getAdcRcorr     (int index) { return getFloat (adcRcorr_order     ,index);}
-		float getTfadcLcorr   (int index) { return getFloat (tFadcLcorr_order   ,index);}
-		float getTfadcRcorr   (int index) { return getFloat (tFadcRcorr_order   ,index);}
-		float getTtdcLcorr    (int index) { return getFloat (tTdcLcorr_order    ,index);}
-		float getTtdcRcorr    (int index) { return getFloat (tTdcRcorr_order    ,index);}
+		float getAdcLcorr     (int index) {
+			if (oldfile == false) {
+				std::cout << "Warning from BBand class: Usage of getAdcLcorr with new file or constructor was used wrong. Return 0 " << std::endl;
+				return 0;
+			}
+			return getFloat (adcLcorr_order    ,index);
+		}
+		float getAdcRcorr     (int index) {
+			if (oldfile == false) {
+				std::cout << "Warning from BBand class: Usage of getAdcRcorr with new file or constructor was used wrong. Return 0 " << std::endl;
+				return 0;
+			}
+			return getFloat (adcRcorr_order     ,index);
+		}
+		float getTfadcLcorr   (int index) {
+			if (oldfile == false) {
+				std::cout << "Warning from BBand class: Usage of getTfadcLcorr with new file or constructor was used wrong. Return 0 " << std::endl;
+				return 0;
+			}
+			return getFloat (tFadcLcorr_order   ,index);
+		}
+		float getTfadcRcorr   (int index) {
+			if (oldfile == false) {
+				std::cout << "Warning from BBand class: Usage of getTfadcRcorr with new file or constructor was used wrong. Return 0 " << std::endl;
+				return 0;
+			}
+			return getFloat (tFadcRcorr_order   ,index);
+		}
+		float getTtdcLcorr    (int index) {
+			if (oldfile == false) {
+				std::cout << "Warning from BBand class: Usage of getTtdcLcorr with new file or constructor was used wrong. Return 0 " << std::endl;
+				return 0;
+			}
+			return getFloat (tTdcLcorr_order    ,index);
+		}
+		float getTtdcRcorr    (int index) {
+			if (oldfile == false) {
+				std::cout << "Warning from BBand class: Usage of getTtdcRcorr with new file or constructor was used wrong. Return 0 " << std::endl;
+				return 0;
+			}
+			return getFloat (tTdcRcorr_order    ,index);
+		}
 		//next functions are for BAND::hits new structure. some of them are mapped to the same class members than previous get-functions
 		float getEx           (int index) { return getFloat (ux_order           ,index);}
 		float getEy           (int index) { return getFloat (uy_order           ,index);}
@@ -84,11 +120,34 @@ class BBand : public hipo::bank {
 		float getTime         (int index) { return getFloat (meantimeTdc_order  ,index);}
 		float getTimeFadc     (int index) { return getFloat (meantimeFadc_order ,index);}
 		//exclusively for new BAND::hits structure
-		float getEnergy       (int index) { return getFloat (energy_order       ,index);}
-		int   getLpmtindex    (int index) { return getInt   (indexLpmt_order    ,index);}
-		int   getRpmtindex    (int index) { return getInt   (indexRpmt_order    ,index);}
-		int   getStatus       (int index) { return getInt   (status_order       ,index);}
-
+		float getEnergy       (int index) {
+			if (oldfile == true) {
+				std::cout << "Warning from BBand class: Usage of getEnergy with old file or constructor was used wrong. Return 0 " << std::endl;
+				return 0;
+			}
+			return getFloat (energy_order       ,index);
+		}
+		int   getLpmtindex    (int index) {
+			if (oldfile == true) {
+				std::cout << "Warning from BBand class: Usage of getLpmtindex with old file or constructor was used wrong. Return 0 " << std::endl;
+				return 0;
+			}
+			return getInt   (indexLpmt_order    ,index);
+		}
+		int   getRpmtindex    (int index) {
+			if (oldfile == true) {
+				std::cout << "Warning from BBand class: Usage of getRpmtindex with old file or constructor was used wrong. Return 0 " << std::endl;
+				return 0;
+			}
+			return getInt   (indexRpmt_order    ,index);
+		}
+		int   getStatus       (int index) {
+			if (oldfile == true) {
+				std::cout << "Warning from BBand class: Usage of getStatus with old file or constructor was used wrong. Return 0 " << std::endl;
+				return 0;
+			}
+			return getInt   (status_order       ,index);
+		}
 
 		int   getBarKey(int index);
 };
