@@ -38,8 +38,12 @@ bool checkElectron( int pid, TVector3 momentum, TVector3 vertex, double time, in
 			double lV, double lW , double E_tot);
 void getPositiveInfo( BParticle particles, double pid[maxPositive], TVector3 momentum[maxPositive], TVector3 vertex[maxPositive],
 			double time[maxPositive], double charge[maxPositive], double beta[maxPositive], double chi2pid[maxPositive], double status[maxPositive] , int index[maxPositive], int& multiplicity );
+void getScinHits( BScintillator scintillator, double pindex[maxScinHits], double detid[maxScinHits], double energy[maxScinHits], double time[maxScinHits],
+	    TVector3 posVector[maxScinHits], double path[maxScinHits], double status[maxScinHits], int posIndex[maxPositive], int posMult, int &scinHits);
+
+
 void getNeutronInfo( BBand band_hits, int& mult, int id[maxNeutrons], double edep[maxNeutrons],
-			double time[maxNeutrons], TVector3 path[maxNeutrons] , double starttime );
+			double time[maxNeutrons], double ftime[maxNeutrons], TVector3 path[maxNeutrons], double starttime);
 bool pointsToBand(double theta,double phi,double z_m);
 void LoadGlobalShift(double* FADC_GLOB_SHIFT);
 
@@ -111,11 +115,11 @@ int main(int argc, char** argv) {
 //  double phi_miss		[maxPositive]= {0.};
 //	double point_miss	[maxPositive]= {0.};
  // Information from REC::Scintillator for positive Particles
-  int scinIndex = 0;
+  int scinHits = 0;
 	double hit_pindex [maxScinHits]= {0.}; //pPid of associated positive particle
 	double hit_detid [maxScinHits]= {0.};
 	double hit_energy [maxScinHits]= {0.};
-	double hit_tof [maxScinHits]= {0.};
+	double hit_time [maxScinHits]= {0.};
 	double hit_x [maxScinHits]= {0.};
 	double hit_y [maxScinHits]= {0.};
 	double hit_z [maxScinHits]= {0.};
@@ -130,9 +134,12 @@ int main(int argc, char** argv) {
 	double dL_n		[maxNeutrons]= {0.};
 	double theta_n		[maxNeutrons]= {0.};
 	double phi_n		[maxNeutrons]= {0.};
-	double p_n		[maxNeutrons]= {0.};
-	double nTime		[maxNeutrons]= {0.};
+	double nTof		[maxNeutrons]= {0.};
+	double nTofFADC		[maxNeutrons]= {0.};
 	double nEdep		[maxNeutrons]= {0.};
+	double n_bandx [maxNeutrons] =  {0.};
+	double n_bandy [maxNeutrons] =  {0.};
+	double n_bandz [maxNeutrons] =  {0.};
 	outTree->Branch("Ebeam"		,&Ebeam			);
 	outTree->Branch("gated_charge"	,&gated_charge		);
 	outTree->Branch("livetime"	,&livetime		);
@@ -186,16 +193,16 @@ int main(int argc, char** argv) {
 //	outTree->Branch("theta_miss"	,theta_miss		,"theta_miss[pMult]/D"	);
 //	outTree->Branch("phi_miss"	,phi_miss		,"phi_miss[pMult]/D"	);
 //	outTree->Branch("point_miss"	,point_miss		,"point_miss[pMult]/D"	);
-  outTree->Branch("scinIndex"		,&scinIndex		);
-  outTree->Branch("hit_pindex"	,&hit_pindex		,"hit_pindex[scinIndex]/D"	);
-  outTree->Branch("hit_detid"	,&hit_detid		,"hit_detid[scinIndex]/D"	);
-  outTree->Branch("hit_energy"	,&hit_energy		,"hit_energy[scinIndex]/D"	);
-	outTree->Branch("hit_tof"	,&hit_tof		,"hit_tof[scinIndex]/D"	);
-	outTree->Branch("hit_x"	,&hit_x		,"hit_x[scinIndex]/D"	);
-  outTree->Branch("hit_y"	,&hit_y		,"hit_y[scinIndex]/D"	);
-	outTree->Branch("hit_z"	,&hit_z		,"hit_z[scinIndex]/D"	);
-	outTree->Branch("hit_path"	,&hit_path		,"hit_path[scinIndex]/D"	);
-	outTree->Branch("hit_status"	,&hit_status		,"hit_status[scinIndex]/D"	);
+  outTree->Branch("scinHits"		,&scinHits		);
+  outTree->Branch("hit_pindex"	,&hit_pindex		,"hit_pindex[scinHits]/D"	);
+  outTree->Branch("hit_detid"	,&hit_detid		,"hit_detid[scinHits]/D"	);
+  outTree->Branch("hit_energy"	,&hit_energy		,"hit_energy[scinHits]/D"	);
+	outTree->Branch("hit_time"	,&hit_time		,"hit_time[scinHits]/D"	);
+	outTree->Branch("hit_x"	,&hit_x		,"hit_x[scinHits]/D"	);
+  outTree->Branch("hit_y"	,&hit_y		,"hit_y[scinHits]/D"	);
+	outTree->Branch("hit_z"	,&hit_z		,"hit_z[scinHits]/D"	);
+	outTree->Branch("hit_path"	,&hit_path		,"hit_path[scinHits]/D"	);
+	outTree->Branch("hit_status"	,&hit_status		,"hit_status[scinHits]/D"	);
 
 
 	outTree->Branch("nMult"		,&nMult			);
@@ -203,10 +210,12 @@ int main(int argc, char** argv) {
 	outTree->Branch("dL_n"		,&dL_n			,"dL_n[nMult]/D"	);
 	outTree->Branch("theta_n"	,&theta_n		,"theta_n[nMult]/D"	);
 	outTree->Branch("phi_n"		,&phi_n			,"phi_n[nMult]/D"	);
-	outTree->Branch("p_n"		,&p_n			,"p_n[nMult]/D"		);
-	outTree->Branch("nTime"		,&nTime			,"nTime[nMult]/D"	);
+	outTree->Branch("nTof"		,&nTof		,"nTof[nMult]/D"	);
+	outTree->Branch("nTofFADC"		,&nTofFADC			,"nTofFADC[nMult]/D"	);
 	outTree->Branch("nEdep"		,&nEdep			,"nEdep[nMult]/D"	);
-
+	outTree->Branch("n_bandx"		,&n_bandx			,"n_bandx[nMult]/D"	);
+	outTree->Branch("n_bandy"		,&n_bandy			,"n_bandy[nMult]/D"	);
+	outTree->Branch("n_bandz"		,&n_bandz			,"n_bandz[nMult]/D"	);
 
 	// Connect to the RCDB
 	rcdb::Connection connection("mysql://rcdb@clasdb.jlab.org/rcdb");
@@ -287,11 +296,11 @@ int main(int argc, char** argv) {
 			memset(	phi_p		,0	,sizeof(phi_p		)	);
 			memset( theta_pq	,0	,sizeof(theta_pq	)	);
 
-			scinIndex = 0;
+			scinHits = 0;
 			memset(	hit_pindex	,0	,sizeof(hit_pindex		)	);
 			memset(	hit_detid		,0	,sizeof(hit_detid		)	);
 			memset(	hit_energy		,0	,sizeof(hit_energy		)	);
-			memset( hit_tof	,0	,sizeof(hit_tof	)	);
+			memset( hit_time	,0	,sizeof(hit_time	)	);
 			memset( hit_x	,0	,sizeof(hit_x	)	);
 			memset( hit_y	,0	,sizeof(hit_y	)	);
 			memset( hit_z	,0	,sizeof(hit_z	)	);
@@ -304,9 +313,12 @@ int main(int argc, char** argv) {
 			memset( dL_n		,0	,sizeof(dL_n		)	);
 			memset( theta_n		,0	,sizeof(theta_n		)	);
 			memset( phi_n		,0	,sizeof(phi_n		)	);
-			memset( p_n		,0	,sizeof(p_n		)	);
-			memset( nTime		,0	,sizeof(nTime		)	);
+			memset( nTof		,0	,sizeof(nTof		)	);
+			memset( nTofFADC		,0	,sizeof(nTofFADC		)	);
 			memset( nEdep		,0	,sizeof(nEdep		)	);
+			memset( n_bandx		,0	,sizeof(n_bandx		)	);
+			memset( n_bandy		,0	,sizeof(n_bandy		)	);
+			memset( n_bandz		,0	,sizeof(n_bandz		)	);
 
 			// Count events
 			if(event_counter%10000==0) cout << "event: " << event_counter << endl;
@@ -381,6 +393,7 @@ int main(int argc, char** argv) {
 			TVector3 pVertex[maxPositive], pMomentum[maxPositive];
 			int pIndex[maxPositive];
 			getPositiveInfo( particles, pPid, pMomentum, pVertex, pTime ,pCharge, pBeta, pChi2pid, pStatus, pIndex, pMult);
+
 			for( int p = 0 ; p < pMult ; p++ ){
 				p_vtx[p]	= pVertex[p].X();
 				p_vty[p]	= pVertex[p].Y();
@@ -406,23 +419,33 @@ int main(int argc, char** argv) {
 		//		point_miss[p] = pointsToBand( theta_miss[p] , phi_miss[p] , p_vtz[p] );
 			}
 
+			TVector3 hitVector[maxScinHits];
+			getScinHits( scintillator, hit_pindex, hit_detid, hit_energy, hit_time, hitVector, hit_path, hit_status, pIndex, pMult, scinHits);
+			for( int hit = 0 ; hit < scinHits ; hit++ ){
+				  hit_x[hit] = hitVector[hit].X();
+				  hit_y[hit] = hitVector[hit].Y();
+				  hit_z[hit] = hitVector[hit].Z();
+			}
+
 
 			// Grab the neutron information:
 			TVector3 nMomentum[maxNeutrons], nPath[maxNeutrons];
-			getNeutronInfo( band_hits, nMult, barID, nEdep, nTime, nPath , starttime );
+			getNeutronInfo( band_hits, nMult, barID, nEdep, nTof, nTofFADC, nPath, starttime);
 			for( int n = 0 ; n < nMult ; n++ ){
 				dL_n[n]		= nPath[n].Mag();
 				theta_n[n]	= nPath[n].Theta();
 				phi_n[n]	= nPath[n].Phi();
-				p_n[n]		= nTime[n];	// no conversion to momentum for the moment
+			  n_bandx[n] = nPath[n].X();
+			  n_bandy[n] = nPath[n].Y();
+			  n_bandz[n] = nPath[n].Z();
 			}
 
 			// Fill tree to do any more plots on the fly
 			outTree->Fill();
 
 		} // end loop over events
-		cout << "Total charge collected in file: " << gated_charge << " [microC]\n";
-		cout << "Total number of events (e,e'pn): " << outTree->GetEntries() << "\n";
+	//	cout << "Total charge collected in file: " << gated_charge << " [microC]\n";
+		cout << "Total number of events written to output: " << outTree->GetEntries() << "\n";
 	}// end loop over files
 
 
@@ -436,15 +459,17 @@ int main(int argc, char** argv) {
 
 
 void getNeutronInfo( BBand band_hits, int& mult, int id[maxNeutrons], double edep[maxNeutrons],
-			double time[maxNeutrons], TVector3 path[maxNeutrons] , double starttime ){
+			double time[maxNeutrons], double ftime[maxNeutrons], TVector3 path[maxNeutrons], double starttime ){
 
 	if( band_hits.getRows() > maxNeutrons ) return; // laser event
 	for( int hit = 0 ; hit < band_hits.getRows() ; hit++ ){
 		if( band_hits.getLayer(hit) == 6 ) continue;
 
 		id[hit]		= band_hits.getBarKey(hit);
+		//this is only true for old file style. Has to be changed later
 		edep[hit]	= sqrt( band_hits.getAdcLcorr(hit) * band_hits.getAdcRcorr(hit) );
-		time[hit]	= band_hits.getMeantimeFadc(hit) - FADC_GLOB_SHIFT[id[hit]] - starttime;
+	  ftime[hit]	= band_hits.getMeantimeFadc(hit) - FADC_GLOB_SHIFT[id[hit]]; //FADC time
+		time[hit]	= band_hits.getMeantimeTdc(hit) - FADC_GLOB_SHIFT[id[hit]]; //TDC time
 		path[hit].SetXYZ(	band_hits.getX(hit), band_hits.getY(hit), band_hits.getZ(hit) 	);
 		mult++;
 	}
@@ -504,6 +529,28 @@ void getPositiveInfo( BParticle particles, double pid[maxPositive], TVector3 mom
 		}
 	}
 }
+
+void getScinHits( BScintillator scintillator, double pindex[maxScinHits], double detid[maxScinHits], double energy[maxScinHits], double time[maxScinHits],
+	 TVector3 posVector[maxScinHits], double path[maxScinHits], double status[maxScinHits], int posIndex[maxPositive], int posMult, int &scinHits) {
+	scinHits = 0;
+	for( int row = 0 ; row < scintillator.getRows() ; row++ ){
+		for ( int i = 0 ; i < posMult ; i++) { //loop over all positive particles
+      if (scintillator.getPindex(row) == posIndex[i]) { //check if hit Pindex corresponds to positive particle index = row from REC::Particles bank
+				pindex[scinHits ] 		= scintillator.getPindex(row);
+			  detid[scinHits ] 		= scintillator.getDetector(row);
+				energy[scinHits ] 		= scintillator.getEnergy(row);
+				time[scinHits ] 		= scintillator.getTime(row);
+				path[scinHits ] 		= scintillator.getPath(row);
+				posVector[scinHits].SetXYZ(	scintillator.getX(row), scintillator.getY(row), scintillator.getZ(row) 	);
+				status		[scinHits]	= scintillator.getStatus(row);
+				scinHits ++;
+			}
+		}
+	}
+}
+
+
+
 bool checkElectron( int pid, TVector3 momentum, TVector3 vertex, double time, int charge, double beta, double chi2pid, int status,
 			double lV, double lW , double E_tot){
 			// Anymore fiducial cuts that are needed for the electron:
