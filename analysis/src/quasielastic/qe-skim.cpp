@@ -46,8 +46,10 @@ void getNeutronInfo( BBand band_hits, int& mult, int id[maxNeutrons], double ede
 			double time[maxNeutrons], double ftime[maxNeutrons], TVector3 path[maxNeutrons], double starttime);
 bool pointsToBand(double theta,double phi,double z_m);
 void LoadGlobalShift(double* FADC_GLOB_SHIFT);
+void LoadGlobalShiftTDC(double* TDC_GLOB_SHIFT);
 
 double FADC_GLOB_SHIFT[600];
+double TDC_GLOB_SHIFT[600];
 
 int main(int argc, char** argv) {
 	// check number of arguments
@@ -222,6 +224,8 @@ int main(int argc, char** argv) {
 
 	// Load FADC offsets
 	LoadGlobalShift(FADC_GLOB_SHIFT);
+	// Load TDC offsets
+	LoadGlobalShiftTDC(TDC_GLOB_SHIFT);	
 
 	// Load input file
 	for( int i = 2 ; i < argc ; i++ ){
@@ -466,10 +470,11 @@ void getNeutronInfo( BBand band_hits, int& mult, int id[maxNeutrons], double ede
 		if( band_hits.getLayer(hit) == 6 ) continue;
 
 		id[hit]		= band_hits.getBarKey(hit);
-		//this is only true for old file style. Has to be changed later
+		//this is only true for old file style. Has to be changed later F.H 06/29/20
 		edep[hit]	= sqrt( band_hits.getAdcLcorr(hit) * band_hits.getAdcRcorr(hit) );
+		//correction for shift only for older files (newer ones have it included!!!) F.H 06/29/20
 	  ftime[hit]	= band_hits.getMeantimeFadc(hit) - FADC_GLOB_SHIFT[id[hit]]; //FADC time
-		time[hit]	= band_hits.getMeantimeTdc(hit) - FADC_GLOB_SHIFT[id[hit]]; //TDC time
+		time[hit]	= band_hits.getMeantimeTdc(hit) - TDC_GLOB_SHIFT[id[hit]]; //TDC time
 		path[hit].SetXYZ(	band_hits.getX(hit), band_hits.getY(hit), band_hits.getZ(hit) 	);
 		mult++;
 	}
@@ -608,6 +613,34 @@ void LoadGlobalShift(double* FADC_GLOB_SHIFT){
 		f >> height;
 		f >> mean;
 		FADC_GLOB_SHIFT[barId] = mean;
+		f >> sig;
+		f >> temp;
+		f >> temp;
+
+	}
+
+	f.close();
+
+}
+
+void LoadGlobalShiftTDC(double* TDC_GLOB_SHIFT){
+
+	ifstream f;
+	int sector, layer, component, barId;
+	double pol0, height, mean, sig, temp;
+
+	f.open("../include/global_offset_tdc_1stIter-04132020.txt");
+
+	while(!f.eof()){
+
+		f >> sector;
+		f >> layer;
+		f >> component;
+		barId = 100*sector + 10*layer + component;
+		f >> pol0;
+		f >> height;
+		f >> mean;
+		TDC_GLOB_SHIFT[barId] = mean;
 		f >> sig;
 		f >> temp;
 		f >> temp;
