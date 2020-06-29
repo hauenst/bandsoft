@@ -28,6 +28,7 @@ using namespace std;
 
 const int maxPositive	= 100;
 const int maxNeutrons	= 50;
+const int maxScinHits = 100;
 
 int getRunNumber( string filename );
 void getEventInfo( BEvent eventInfo, double &integrated_charge, double &livetime, double &starttime );
@@ -35,9 +36,8 @@ void getElectronInfo( BParticle particles, int& pid, TVector3& momentum, TVector
 			double& time, int& charge, double& beta, double& chi2pid, int& status );
 bool checkElectron( int pid, TVector3 momentum, TVector3 vertex, double time, int charge, double beta, double chi2pid, int status,
 			double lV, double lW , double E_tot);
-void getProtonInfo( BParticle particles, double pid[maxPositive], TVector3 momentum[maxPositive], TVector3 vertex[maxPositive],
-			double time[maxPositive], double charge[maxPositive], double beta[maxPositive], double chi2pid[maxPositive], double status[maxPositive] , int& multiplicity );
-bool checkProton( int pid, TVector3 momentum, TVector3 del_vertex, double time, int charge, double beta, double chi2pid, int status, int mult );
+void getPositiveInfo( BParticle particles, double pid[maxPositive], TVector3 momentum[maxPositive], TVector3 vertex[maxPositive],
+			double time[maxPositive], double charge[maxPositive], double beta[maxPositive], double chi2pid[maxPositive], double status[maxPositive] , int index[maxPositive], int& multiplicity );
 void getNeutronInfo( BBand band_hits, int& mult, int id[maxNeutrons], double edep[maxNeutrons],
 			double time[maxNeutrons], TVector3 path[maxNeutrons] , double starttime );
 bool pointsToBand(double theta,double phi,double z_m);
@@ -69,6 +69,8 @@ int main(int argc, char** argv) {
 	double eChi2pid		= 0;
 	double E_tot		= 0;
 	double E_pcal		= 0;
+	double E_ecin		= 0;
+	double E_ecout	= 0;
 	double t_e		= 0;
 	double dL_e		= 0;
 	double lU		= 0;
@@ -94,8 +96,6 @@ int main(int argc, char** argv) {
 	double pStatus		[maxPositive]= {0.};
 	double pTime		[maxPositive]= {0.};
 	double pBeta		[maxPositive]= {0.};
-	double pEdep		[maxPositive]= {0.};
-	double pDetID 	[maxPositive]= {0.};
 	double pChi2pid		[maxPositive]= {0.};
 	double p_vtx		[maxPositive]= {0.};
 	double p_vty		[maxPositive]= {0.};
@@ -104,12 +104,26 @@ int main(int argc, char** argv) {
 	double theta_p		[maxPositive]= {0.};
 	double phi_p		[maxPositive]= {0.};
 	double theta_pq		[maxPositive]= {0.};
-	double Wp		[maxPositive]= {0.};
+//	double Wp		[maxPositive]= {0.};
 //	double p_miss		[maxPositive]= {0.};
 //	double m_miss		[maxPositive]= {0.};
 //	double theta_miss	[maxPositive]= {0.};
 //  double phi_miss		[maxPositive]= {0.};
 //	double point_miss	[maxPositive]= {0.};
+ // Information from REC::Scintillator for positive Particles
+  int scinIndex = 0;
+	double hit_pindex [maxScinHits]= {0.}; //pPid of associated positive particle
+	double hit_detid [maxScinHits]= {0.};
+	double hit_energy [maxScinHits]= {0.};
+	double hit_tof [maxScinHits]= {0.};
+	double hit_x [maxScinHits]= {0.};
+	double hit_y [maxScinHits]= {0.};
+	double hit_z [maxScinHits]= {0.};
+	double hit_path [maxScinHits]= {0.};
+	double hit_status [maxScinHits]= {0.};
+
+
+
 	// 	Neutron info:
 	int nMult		= 0;
 	int barID		[maxNeutrons]= {0};
@@ -131,6 +145,8 @@ int main(int argc, char** argv) {
 	outTree->Branch("eChi2pid"	,&eChi2pid		);
 	outTree->Branch("E_tot"		,&E_tot			);
 	outTree->Branch("E_pcal"	,&E_pcal		);
+	outTree->Branch("E_ecin"	,&E_ecin		);
+	outTree->Branch("E_ecout"	,&E_ecout		);
 	outTree->Branch("t_e"		,&t_e			);
 	outTree->Branch("dL_e"		,&dL_e			);
 	outTree->Branch("lU"		,&lU			);
@@ -155,8 +171,6 @@ int main(int argc, char** argv) {
 	outTree->Branch("pStatus"	,&pStatus		,"pStatus[pMult]/D"	);
 	outTree->Branch("pTime"		,&pTime			,"pTime[pMult]/D"	);
 	outTree->Branch("pBeta"		,&pBeta			,"pBeta[pMult]/D"	);
-	outTree->Branch("pEdep"		,&pEdep			,"pEdep[pMult]/D"	);
-	outTree->Branch("pDetID"	,&pDetID			,"pDetID[pMult]/D"	);
 	outTree->Branch("pChi2pid",&pChi2pid		,"pChi2pid[pMult]/D"	);
 	outTree->Branch("p_vtx"		,&p_vtx			,"p_vtx[pMult]/D"	);
 	outTree->Branch("p_vty"		,&p_vty			,"p_vty[pMult]/D"	);
@@ -164,14 +178,26 @@ int main(int argc, char** argv) {
 	outTree->Branch("p_p"		,&p_p			,"p_p[pMult]/D"		);
 	outTree->Branch("theta_p"	,&theta_p		,"theta_p[pMult]/D"	);
 	outTree->Branch("phi_p"		,&phi_p			,"phi_p[pMult]/D"	);
+	outTree->Branch("theta_pq"	,theta_pq		,"theta_pq[pMult]/D"	);
 
+	//outTree->Branch("Wp"		,Wp			,"Wp[pMult]/D"		);
 //	outTree->Branch("p_miss"	,p_miss			,"p_miss[pMult]/D"	);
 //	outTree->Branch("m_miss"	,m_miss			,"m_miss[pMult]/D"	);
 //	outTree->Branch("theta_miss"	,theta_miss		,"theta_miss[pMult]/D"	);
 //	outTree->Branch("phi_miss"	,phi_miss		,"phi_miss[pMult]/D"	);
-	outTree->Branch("theta_pq"	,theta_pq		,"theta_pq[pMult]/D"	);
-	outTree->Branch("Wp"		,Wp			,"Wp[pMult]/D"		);
 //	outTree->Branch("point_miss"	,point_miss		,"point_miss[pMult]/D"	);
+  outTree->Branch("scinIndex"		,&scinIndex		);
+  outTree->Branch("hit_pindex"	,&hit_pindex		,"hit_pindex[scinIndex]/D"	);
+  outTree->Branch("hit_detid"	,&hit_detid		,"hit_detid[scinIndex]/D"	);
+  outTree->Branch("hit_energy"	,&hit_energy		,"hit_energy[scinIndex]/D"	);
+	outTree->Branch("hit_tof"	,&hit_tof		,"hit_tof[scinIndex]/D"	);
+	outTree->Branch("hit_x"	,&hit_x		,"hit_x[scinIndex]/D"	);
+  outTree->Branch("hit_y"	,&hit_y		,"hit_y[scinIndex]/D"	);
+	outTree->Branch("hit_z"	,&hit_z		,"hit_z[scinIndex]/D"	);
+	outTree->Branch("hit_path"	,&hit_path		,"hit_path[scinIndex]/D"	);
+	outTree->Branch("hit_status"	,&hit_status		,"hit_status[scinIndex]/D"	);
+
+
 	outTree->Branch("nMult"		,&nMult			);
 	outTree->Branch("barID"		,&barID			,"barID[nMult]/D"	);
 	outTree->Branch("dL_n"		,&dL_n			,"dL_n[nMult]/D"	);
@@ -252,8 +278,6 @@ int main(int argc, char** argv) {
 			memset(	pStatus		,0	,sizeof(pStatus		)	);
 			memset(	pTime		,0	,sizeof(pTime		)	);
 			memset(	pBeta		,0	,sizeof(pBeta		)	);
-			memset(	pEdep		,0	,sizeof(pEdep		)	);
-			memset(	pDetID		,0	,sizeof(pDetID		)	);
 			memset(	pChi2pid	,0	,sizeof(pChi2pid	)	);
 			memset(	p_vtx		,0	,sizeof(p_vtx		)	);
 			memset(	p_vty		,0	,sizeof(p_vty		)	);
@@ -262,7 +286,18 @@ int main(int argc, char** argv) {
 			memset(	theta_p		,0	,sizeof(theta_p		)	);
 			memset(	phi_p		,0	,sizeof(phi_p		)	);
 			memset( theta_pq	,0	,sizeof(theta_pq	)	);
-			memset( Wp		,0	,sizeof(Wp		)	);
+
+			scinIndex = 0;
+			memset(	hit_pindex	,0	,sizeof(hit_pindex		)	);
+			memset(	hit_detid		,0	,sizeof(hit_detid		)	);
+			memset(	hit_energy		,0	,sizeof(hit_energy		)	);
+			memset( hit_tof	,0	,sizeof(hit_tof	)	);
+			memset( hit_x	,0	,sizeof(hit_x	)	);
+			memset( hit_y	,0	,sizeof(hit_y	)	);
+			memset( hit_z	,0	,sizeof(hit_z	)	);
+			memset( hit_path	,0	,sizeof(hit_path	)	);
+			memset( hit_status	,0	,sizeof(hit_status	)	);
+
 
 			nMult		= 0;
 			memset( barID		,0	,sizeof(barID		)	);
@@ -299,19 +334,32 @@ int main(int argc, char** argv) {
 
 			// Get electron from particle bank REC::Particle
 			TVector3 eVertex, eMomentum;
+			//Returns first entry of particle bank but does not check for PID
 			getElectronInfo( particles, ePid, eMomentum, eVertex, eTime ,eCharge, eBeta, eChi2pid, eStatus );
+
 			e_vtx = eVertex.X(); e_vty = eVertex.Y(); e_vtz = eVertex.Z();
 			//	get electron information from scint and calo banks:
 			t_e 	= scintillator.getTime(0) - starttime;
 			dL_e	= scintillator.getPath(0);
 			E_tot 	= calorimeter.getTotE(0);
 			E_pcal 	= calorimeter.getPcalE(0);
+			E_ecin  = calorimeter.getECinE(0);
+			E_ecout = calorimeter.getECoutE(0);
 			lU	= calorimeter.getLU(0);
 			lV	= calorimeter.getLV(0);
 			lW	= calorimeter.getLW(0);
 			//	Do electron PID cuts
-			//		none implemented for the moment
+			//		only PID (11) and charge (-1) selection on first particle
 			bool ePass = checkElectron( ePid, eMomentum, eVertex, eTime ,eCharge, eBeta, eChi2pid, eStatus , lV , lW , E_tot );
+			//check other particles for electron or negative charge
+			for( int row = 1 ; row < particles.getRows() ; row++ ){ // start after electron information
+				if (particles.getPid(row)==11) { //check for other electron (electron exclusivity) and skip event
+					ePass = false;
+				}
+				if (particles.getCharge(row)==-1) { //check for other negative charge particle and skip event
+					ePass = false;
+				}
+			}
 			if( !ePass ) continue;
 
 			// From electron information and beam information, create kinematic variables
@@ -329,9 +377,10 @@ int main(int argc, char** argv) {
 			W2		= mP*mP - Q2 + 2.*nu*mP;
 
 
-			// Grab the proton information:
+			// Grab the information for a positive particle:
 			TVector3 pVertex[maxPositive], pMomentum[maxPositive];
-			getProtonInfo( particles, pPid, pMomentum, pVertex, pTime ,pCharge, pBeta, pChi2pid, pStatus, pMult );
+			int pIndex[maxPositive];
+			getPositiveInfo( particles, pPid, pMomentum, pVertex, pTime ,pCharge, pBeta, pChi2pid, pStatus, pIndex, pMult);
 			for( int p = 0 ; p < pMult ; p++ ){
 				p_vtx[p]	= pVertex[p].X();
 				p_vty[p]	= pVertex[p].Y();
@@ -346,13 +395,13 @@ int main(int argc, char** argv) {
 		//		phi_miss[p]	= missMomentum.Phi();
 				theta_pq[p]	= qMomentum.Angle(pMomentum[p]);
 
-				double E_p = sqrt( p_p[p]*p_p[p] + mP*mP );
+	//			double E_p = sqrt( p_p[p]*p_p[p] + mP*mP );
 			//	m_miss[p] 	= sqrt( pow( nu + mD - E_p , 2 ) - ( q*q + p_p[p]*p_p[p] - 2*q*p_p[p]*cos(theta_pq[p]) ) );
 		//		if( m_miss[p] != m_miss[p] ) m_miss[p] = 0.;
 
-				double W_primeSq = mD*mD - Q2 + mP*mP + 2.*mD*(nu-E_p) - 2.*nu*E_p + 2.*q*p_p[p]*cos(theta_pq[p]);
-				Wp[p] = sqrt(W_primeSq);
-				if( Wp[p] != Wp[p] ) Wp[p] = 0.;
+	//			double W_primeSq = mD*mD - Q2 + mP*mP + 2.*mD*(nu-E_p) - 2.*nu*E_p + 2.*q*p_p[p]*cos(theta_pq[p]);
+	//			Wp[p] = sqrt(W_primeSq);
+	//			if( Wp[p] != Wp[p] ) Wp[p] = 0.;
 
 		//		point_miss[p] = pointsToBand( theta_miss[p] , phi_miss[p] , p_vtz[p] );
 			}
@@ -422,8 +471,10 @@ void getEventInfo( BEvent eventInfo, double &integrated_charge, double &livetime
 	starttime		= (double)eventInfo.getSTTime(0);
 	return;
 }
+//Return first entry in Particle bank
 void getElectronInfo( BParticle particles, int& pid, TVector3& momentum, TVector3& vertex,
 			double& time, int& charge, double& beta, double& chi2pid, int& status ){
+
 	pid 		= particles.getPid(0);
 	momentum 	= particles.getV3P(0);
 	vertex		= particles.getV3v(0);
@@ -434,20 +485,21 @@ void getElectronInfo( BParticle particles, int& pid, TVector3& momentum, TVector
 	status		= particles.getStatus(0);
 	return;
 }
-void getProtonInfo( BParticle particles, double pid[maxPositive], TVector3 momentum[maxPositive], TVector3 vertex[maxPositive],
-			double time[maxPositive], double charge[maxPositive], double beta[maxPositive], double chi2pid[maxPositive], double status[maxPositive] , int& multiplicity ){
-	// Takes the first proton in the bank
+void getPositiveInfo( BParticle particles, double pid[maxPositive], TVector3 momentum[maxPositive], TVector3 vertex[maxPositive],	double time[maxPositive],
+	double charge[maxPositive], double beta[maxPositive], double chi2pid[maxPositive], double status[maxPositive] , int index[maxPositive], int& multiplicity ){
+	// Takes all positive particles in REC::Particles
 	multiplicity = 0;
 	for( int row = 1 ; row < particles.getRows() ; row++ ){ // start after electron information
-		pid[multiplicity] 		= particles.getPid(row);
-		charge[multiplicity]		= particles.getCharge(row);
-		if( charge[multiplicity] == 1 ){
+			if( particles.getCharge(row) == 1 ){
+			pid[multiplicity] 		= particles.getPid(row);
+			charge[multiplicity]		= particles.getCharge(row);
 			momentum 	[multiplicity]	= particles.getV3P(row);
 			vertex		[multiplicity]	= particles.getV3v(row);
 			time		[multiplicity]	= particles.getVt(row);
 			beta		[multiplicity]	= particles.getBeta(row);
 			chi2pid		[multiplicity]	= particles.getChi2pid(row);
 			status		[multiplicity]	= particles.getStatus(row);
+			index [multiplicity] = row;
 			multiplicity ++;
 		}
 	}
@@ -473,12 +525,11 @@ bool checkElectron( int pid, TVector3 momentum, TVector3 vertex, double time, in
 	//if( vertex.Y() < -2 || vertex.Y() > 2) return false;
 	//if( vertex.Z() < -7 || vertex.Z() > 2) return false;
 	//if( time < 15 ) return false;
-	//if( momentum.Mag() < 2 || momentum.Mag() > 10.6 ) return false;
 	//if( E_tot / momentum.Mag() < 0.15 || E_tot / momentum.Mag() > 0.3 ) return false;
 
 	return true;
 }
-bool checkProton( int pid, TVector3 momentum, TVector3 del_vertex, double time, int charge, double beta, double chi2pid, int status, int mult ){
+//bool checkProton( int pid, TVector3 momentum, TVector3 del_vertex, double time, int charge, double beta, double chi2pid, int status, int mult ){
 	//if( momentum.Mag() == 0 || momentum.Mag() > 4.2 ) return false;
 	//if( beta <= 0 || beta > 1 ) return false;
 	//if( mult != 1 ) return false;
@@ -488,8 +539,8 @@ bool checkProton( int pid, TVector3 momentum, TVector3 del_vertex, double time, 
 	//if( chi2pid < -3 || chi2pid > 3 ) return false;
 
 
-	return true;
-}
+	//return true;
+//}
 
 
 void LoadGlobalShift(double* FADC_GLOB_SHIFT){
