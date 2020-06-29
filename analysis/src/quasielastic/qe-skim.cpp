@@ -97,6 +97,7 @@ int main(int argc, char** argv) {
 	double W2		= 0;
 	// 	Positive Particles info:
 	int pMult		= 0;
+	int pIndex		[maxPositive]= {0.};
 	double pPid		[maxPositive]= {0.};
 	double pCharge		[maxPositive]= {0.};
 	double pStatus		[maxPositive]= {0.};
@@ -175,6 +176,7 @@ int main(int argc, char** argv) {
 	outTree->Branch("xB"		,&xB			);
 	outTree->Branch("W2"		,&W2			);
 	outTree->Branch("pMult"		,&pMult			);
+	outTree->Branch("pIndex"		,&pIndex			,"pIndex[pMult]/I"	);
 	outTree->Branch("pPid"		,&pPid			,"pPid[pMult]/D"	);
 	outTree->Branch("pCharge"	,&pCharge		,"pCharge[pMult]/D"	);
 	outTree->Branch("pStatus"	,&pStatus		,"pStatus[pMult]/D"	);
@@ -187,7 +189,7 @@ int main(int argc, char** argv) {
 	outTree->Branch("p_p"		,&p_p			,"p_p[pMult]/D"		);
 	outTree->Branch("theta_p"	,&theta_p		,"theta_p[pMult]/D"	);
 	outTree->Branch("phi_p"		,&phi_p			,"phi_p[pMult]/D"	);
-	outTree->Branch("theta_pq"	,theta_pq		,"theta_pq[pMult]/D"	);
+	outTree->Branch("theta_pq"	,&theta_pq		,"theta_pq[pMult]/D"	);
 
 	//outTree->Branch("Wp"		,Wp			,"Wp[pMult]/D"		);
 //	outTree->Branch("p_miss"	,p_miss			,"p_miss[pMult]/D"	);
@@ -225,7 +227,7 @@ int main(int argc, char** argv) {
 	// Load FADC offsets
 	LoadGlobalShift(FADC_GLOB_SHIFT);
 	// Load TDC offsets
-	LoadGlobalShiftTDC(TDC_GLOB_SHIFT);	
+	LoadGlobalShiftTDC(TDC_GLOB_SHIFT);
 
 	// Load input file
 	for( int i = 2 ; i < argc ; i++ ){
@@ -286,6 +288,7 @@ int main(int argc, char** argv) {
 			xB		= 0;
 			W2		= 0;
 			pMult		= 0;
+			memset(	pIndex		,0	,sizeof(pIndex		)	);
 			memset(	pPid		,0	,sizeof(pPid		)	);
 			memset(	pCharge		,0	,sizeof(pCharge		)	);
 			memset(	pStatus		,0	,sizeof(pStatus		)	);
@@ -395,7 +398,6 @@ int main(int argc, char** argv) {
 
 			// Grab the information for a positive particle:
 			TVector3 pVertex[maxPositive], pMomentum[maxPositive];
-			int pIndex[maxPositive];
 			getPositiveInfo( particles, pPid, pMomentum, pVertex, pTime ,pCharge, pBeta, pChi2pid, pStatus, pIndex, pMult);
 
 			for( int p = 0 ; p < pMult ; p++ ){
@@ -484,8 +486,8 @@ void getNeutronInfo( BBand band_hits, int& mult, int id[maxNeutrons], double ede
 int getRunNumber( string filename ){
 	//string parsed = filename.substr( filename.find("inc") );
 	//string parsed = filename.substr( filename.find("_clas") );
-	string parsed = filename.substr( filename.find("_band") );
-	string moreparse = parsed.substr(6,8);
+	string parsed = filename.substr( filename.find("band_") );
+	string moreparse = parsed.substr(6,6);
 	cout << filename << " " << parsed << "\n";
 	cout << moreparse << " " << stoi(moreparse) << "\n\n";
         return stoi(moreparse);
